@@ -8,7 +8,7 @@
             "name": "Python: Current File",
             "type": "python",
             "request": "launch",
-            "program": "c:\\Users\\johns\\Documents\\Johnson\\cmpt 417\\code\\run_experiments.py",
+            "program": "C:\\Users\\Eric\\Documents\\SFU\\4 Fall 2021\\CMPT 417\\417-proj\\run_experiments.py",
             "console": "integratedTerminal",
             "args": ["--instance", "instances/getall.txt", "--solver", "Independent"]
         }

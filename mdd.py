@@ -1,5 +1,21 @@
 import heapq
 
+class NodeDictWrap(dict):
+
+    def __init__(self,*args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+    def __getattr__(self, item):
+        return super().__getitem__(item)
+
+    def __setattr__(self, item, value):
+        return super().__setitem__(item, value)
+
+    def __lt__(self,other):
+        # break ties in favor of lower h_val. 
+        return self.h_val < other.h_val
+
+
 def move(loc, dir):
     directions = [(0, -1), (1, 0), (0, 1), (-1, 0)]
     return loc[0] + directions[dir][0], loc[1] + directions[dir][1]
@@ -50,13 +66,12 @@ def get_path(goal_node):
     return path
 
 def push_node(open_list, node):
-    heapq.heappush(open_list, (node['g_val'] + node['h_val'], node['h_val'], node['loc'], node))
-    # print("PUSHING NODE", node)
+    heapq.heappush(open_list, (node['g_val'] + node['h_val'], node['h_val'], node['loc'], NodeDictWrap(node)))
+    # print(f"PUSHING heuristic: {node['g_val'] + node['h_val']} path: {get_path(node)}")
 
 def pop_node(open_list):
     _, _, _, curr = heapq.heappop(open_list)
-    # print("POPPING curr path:", get_path(curr))
-    # print("heuristic is ", curr['g_val'] + curr['h_val'])
+    # print(f"POPPING heuristic: {curr['g_val'] + curr['h_val']} path: {get_path(curr)}")
     return curr
 
 def compare_nodes(n1, n2):
@@ -80,7 +95,7 @@ def get_all_optimal_paths(my_map, start_loc, goal_loc, h_values):
     while len(open_list) > 0:
         # print("open list to pop", open_list)
         curr = pop_node(open_list)
-        # print("curr is:", curr)
+        # print("curr is:", get_path(curr))
         if curr['loc'] == goal_loc:
             curr_path = get_path(curr)
             print("Current path to goal found:", curr_path)
@@ -106,15 +121,7 @@ def get_all_optimal_paths(my_map, start_loc, goal_loc, h_values):
                     'parent': curr,
                     'time': curr['time'] + 1}
             
-            if (child['loc'], child['time']) in closed_list: # if we have been to this loc at this time before
-                existing_node = closed_list[(child['loc'], child['time'])]
-                print("We have been here before! this is the old node:", existing_node)
-                if compare_nodes(child, existing_node): # if new child is better than existing node
-                    print("new child is better")
-                    closed_list[(child['loc'], child['time'])] = child
-                    push_node(open_list, child)
-            else:
-                closed_list[(child['loc'], child['time'])] = child
-                push_node(open_list, child)
+            closed_list[(child['loc'], child['time'])] = child
+            push_node(open_list, child)
 
     return None  # Failed to find solutions
