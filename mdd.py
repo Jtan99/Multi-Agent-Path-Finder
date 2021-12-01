@@ -107,7 +107,6 @@ def get_all_optimal_paths(my_map, start_loc, goal_loc, h_values):
             paths.append(curr_path)
             continue
 
-            
         for dir in range(4):
             child_loc = move(curr['loc'], dir)
             if child_loc[0] < 0 or child_loc[0] >= len(my_map) \
@@ -125,3 +124,85 @@ def get_all_optimal_paths(my_map, start_loc, goal_loc, h_values):
             push_node(open_list, child)
 
     return None  # Failed to find solutions
+
+class MDDNode():
+
+    def __init__(self, location):
+        self.parent = []
+        self.children = []
+        self.location = location
+
+    def display(self):
+        print("Parent:", [o.location for o in self.parent])
+        print("Location:", self.location)
+        print("Children:", [o.location for o in self.children])
+        print(self)
+
+    def updateNode(self, parent):
+        if (parent not in self.parent):
+            self.parent.append(parent)
+        if (self not in parent.children):
+            parent.children.append(self)
+    
+        
+
+def displayLayer(node, level):
+    
+    print("Level:", level)
+    node.display()
+    print()
+    if(len(node.children) == 0):
+        return
+    else:
+        for child in node.children:
+            displayLayer(child, level+1)
+
+    
+
+
+
+
+def buildMDDTree(optimal_paths):
+    root_location = optimal_paths[0][0]
+    root_node = MDDNode(root_location)
+    # curr = root_node
+
+    existing_nodes = {}
+    for path in optimal_paths:
+        curr = root_node
+        for location in path[1:]:
+            # make a new node for this location
+            # add prev parent to it
+
+            # check if this location is existing node
+            # use if it is 
+            if location in existing_nodes:
+                new_node = existing_nodes[location]
+            else:
+                new_node = MDDNode(location)
+                existing_nodes[location] = new_node
+            new_node.updateNode(curr)
+            
+            curr = new_node
+
+    return root_node
+    
+
+
+def main():
+    root = buildMDDTree([[(1, 1), (1, 2), (2, 2), (3, 2)],
+                        [(1, 1), (2, 1), (2, 2), (3, 2)], 
+                        [(1, 1), (2, 1), (3, 1), (3, 2)]])
+    # root = buildMDDTree([])
+    displayLayer(root,0)
+    #              (1,1)
+    #             /    \
+    #            (1,2) (2,1)
+    #             \     /  \
+    #              (2,2)     (3,1)
+    #                 \      /
+    #                   (3,2)
+
+
+if __name__ == "__main__":
+    main()
