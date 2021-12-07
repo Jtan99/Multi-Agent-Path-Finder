@@ -57,6 +57,6 @@ class Graph:
             if visited[j]:
                 mvc_set.append(j)
         
-        print("VC set", mvc_set)
-        print("MVC size lower bound", math.ceil(len(mvc_set)/2))
+        # print("VC set", mvc_set)
+        # print("MVC size lower bound", math.ceil(len(mvc_set)/2))
         return mvc_set

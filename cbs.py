@@ -246,7 +246,7 @@ class CBSSolver(object):
     def push_node(self, node):
         # heapq.heappush(self.open_list, (node['cost'], len(node['collisions']), self.num_of_generated, node))
         heapq.heappush(self.open_list, (node['cost'] + node['h'], len(node['collisions']), self.num_of_generated, node))
-        # print("Generate node {}".format(self.num_of_generated))
+        print("Generate node {}".format(self.num_of_generated))
         self.num_of_generated += 1
 
     def pop_node(self):
@@ -277,8 +277,8 @@ class CBSSolver(object):
         for i in range(self.num_of_agents):  # Find initial path for each agent
             path = a_star(self.my_map, self.starts[i], self.goals[i], self.heuristics[i],
                           i, root['constraints'])
-            # if path is None:
-            #     raise BaseException('No solutions')
+            if path is None:
+                raise BaseException('No solutions')
             root['paths'].append(path)
 
         root['cost'] = get_sum_of_cost(root['paths'])
@@ -335,7 +335,6 @@ class CBSSolver(object):
                             break
                         else:
                             child['paths'][i] = new_path
-                        # child['paths'][i] = new_path
                 if prune_child:
                     continue
 

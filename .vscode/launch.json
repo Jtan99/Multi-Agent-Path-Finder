@@ -10,11 +10,11 @@
             "request": "launch",
             // "program": "C:\\Users\\Eric\\Documents\\SFU\\4 Fall 2021\\CMPT 417\\417-proj\\run_experiments.py",
             // "program": "c:\\Users\\johns\\Documents\\Johnson\\cmpt 417\\code\\mdd.py",
-            "program": "c:\\Users\\johns\\Documents\\Johnson\\cmpt 417\\code\\mvc.py",
-            // "program": "c:\\Users\\johns\\Documents\\Johnson\\cmpt 417\\code\\run_experiments.py",
+            // "program": "c:\\Users\\johns\\Documents\\Johnson\\cmpt 417\\code\\mvc.py",
+            "program": "c:\\Users\\johns\\Documents\\Johnson\\cmpt 417\\code\\run_experiments.py",
             "console": "integratedTerminal",
             // "args": ["--instance", "instances/double4by4diff.txt", "--solver", "Independent"]
-            // "args": ["--instance", "instances/double4by4conflict.txt", "--solver", "CBS"]
+            "args": ["--instance", "instances/test_47.txt", "--solver", "CBS"]
 
         }
     ]

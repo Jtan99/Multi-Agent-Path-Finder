@@ -99,7 +99,7 @@ def get_all_optimal_paths(my_map, start_loc, goal_loc, h_values):
         # print("curr is:", get_path(curr))
         if curr['loc'] == goal_loc:
             curr_path = get_path(curr)
-            print("Current path to goal found:", curr_path)
+            # print("Current path to goal found:", curr_path)
             if(first_time):
                 earliest_goal_timestep = len(curr_path)
                 first_time = False
@@ -124,7 +124,7 @@ def get_all_optimal_paths(my_map, start_loc, goal_loc, h_values):
             closed_list[(child['loc'], child['time'])] = child
             push_node(open_list, child)
 
-    return None  # Failed to find solutions
+    return paths  # Failed to find solutions
 
 class MDDNode():
 
@@ -172,9 +172,9 @@ class JointMDDNode():
 
 def displayLayer(node, level):
     
-    print("Level:", level)
-    node.display()
-    print()
+    # print("Level:", level)
+    # node.display()
+    # print()
     if(len(node.children) == 0):
         return
     else:
@@ -218,120 +218,120 @@ def extendMDDTree(goal_node, height_diff):
         # print("new node: ", new_node.display())
     
     
-def buildJointMDD(paths1, paths2):
+# def buildJointMDD(paths1, paths2):
 
-    root1, node_dict1 = buildMDDTree(paths1)
-    root2, node_dict2 = buildMDDTree(paths2)
+#     root1, node_dict1 = buildMDDTree(paths1)
+#     root2, node_dict2 = buildMDDTree(paths2)
         
-    height1 = len(paths1[0])
-    height2 = len(paths2[0])
+#     height1 = len(paths1[0])
+#     height2 = len(paths2[0])
 
-    # pseudo
+#     # pseudo
 
-    # Balance both mdds:
-        # if one is shorter, extend it to same length by duplicating bottom node
-    if (height1 != height2):
-        if (height1 < height2):
-            # first mdd shorter
-            goal_loc = paths1[0][-1]
-            bottom_node = node_dict1[goal_loc]
-            extendMDDTree(bottom_node, height2-height1)
+#     # Balance both mdds:
+#         # if one is shorter, extend it to same length by duplicating bottom node
+#     if (height1 != height2):
+#         if (height1 < height2):
+#             # first mdd shorter
+#             goal_loc = paths1[0][-1]
+#             bottom_node = node_dict1[goal_loc]
+#             extendMDDTree(bottom_node, height2-height1)
             
-        else:
-            # second is shorter
-            goal_loc = paths2[0][-1]
-            bottom_node = node_dict2[goal_loc]
-            extendMDDTree(bottom_node, height1-height2)
+#         else:
+#             # second is shorter
+#             goal_loc = paths2[0][-1]
+#             bottom_node = node_dict2[goal_loc]
+#             extendMDDTree(bottom_node, height1-height2)
 
-    # print(node_dict2)
-    # displayLayer(node_dict2[paths2[0][0]] , 0)
+#     # print(node_dict2)
+#     # displayLayer(node_dict2[paths2[0][0]] , 0)
                 
             
     
-    # build root node for jointmdd
-    # add it to open list
-    q = queue.Queue()
-    root = JointMDDNode(root1.location, root2.location, 0)
-    q.put(root)
+#     # build root node for jointmdd
+#     # add it to open list
+#     q = queue.Queue()
+#     root = JointMDDNode(root1.location, root2.location, 0)
+#     q.put(root)
 
-    # while open list not empty
-    existing_dict = {
-        (root1.location, root2.location, 0): root
-    }
+#     # while open list not empty
+#     existing_dict = {
+#         (root1.location, root2.location, 0): root
+#     }
     
-    while (not q.empty()):
-        print('inside loop')
-    # pop one node from open list
-        curr = q.get()
+#     while (not q.empty()):
+#         print('inside loop')
+#     # pop one node from open list
+#         curr = q.get()
 
-        loc1 = curr.location[0]
-        loc2 = curr.location[1]
+#         loc1 = curr.location[0]
+#         loc2 = curr.location[1]
 
-        node1 = node_dict1[loc1]
-        node2 = node_dict2[loc2]
+#         node1 = node_dict1[loc1]
+#         node2 = node_dict2[loc2]
 
-        if (len(node1.children) == 0 or len(node2.children) == 0):
-            print('heya')
-            continue
+#         if (len(node1.children) == 0 or len(node2.children) == 0):
+#             print('heya')
+#             continue
         
-        loc_combinations = []
-        for node1_child in node1.children:
-            for node2_child in node2.children:
-                loc_combinations.append((node1_child.location, node2_child.location))
+#         loc_combinations = []
+#         for node1_child in node1.children:
+#             for node2_child in node2.children:
+#                 loc_combinations.append((node1_child.location, node2_child.location))
 
-        # print("DEBUG:", loc_combinations)
+#         # print("DEBUG:", loc_combinations)
 
-        for combo in loc_combinations:
-            if (combo[0] == combo[1]):
-                continue
-            # create node if needed
-            params = (combo[0], combo[1], curr.timestep+1)
-            if (params in existing_dict):
-                # add relationship
-                new_node = existing_dict[params]
-            else:
-                new_node = JointMDDNode(combo[0], combo[1], curr.timestep+1)
-                existing_dict[params] = new_node
-                q.put(new_node)
-            new_node.updateNode(curr)
-    return root
+#         for combo in loc_combinations:
+#             if (combo[0] == combo[1]):
+#                 continue
+#             # create node if needed
+#             params = (combo[0], combo[1], curr.timestep+1)
+#             if (params in existing_dict):
+#                 # add relationship
+#                 new_node = existing_dict[params]
+#             else:
+#                 new_node = JointMDDNode(combo[0], combo[1], curr.timestep+1)
+#                 existing_dict[params] = new_node
+#                 q.put(new_node)
+#             new_node.updateNode(curr)
+#     return root
             
-        # call helper method generateChildren(joint-node)
-            # get children of both locations from the dicts
-            # if either has no children, that means no more nodes to generate
-                # check end condition
-            # children of the jointmdd node = compute combinations 
-                # dont add if its same location both sides
+#         # call helper method generateChildren(joint-node)
+#             # get children of both locations from the dicts
+#             # if either has no children, that means no more nodes to generate
+#                 # check end condition
+#             # children of the jointmdd node = compute combinations 
+#                 # dont add if its same location both sides
 
-        # create nodes if not existing
-        # update nodes (parent/children relationship)
-        # make sure to add relationship if its an existing node already
-            # add them to an "open list"
+#         # create nodes if not existing
+#         # update nodes (parent/children relationship)
+#         # make sure to add relationship if its an existing node already
+#             # add them to an "open list"
 
 
 
-def main():
+# def main():
 
-#     paths1 = [[(2, 1), (2, 2), (2, 3), (2, 4), (3, 4)], [(2, 1), (2, 2), (2, 3), (3, 3), (3, 4)], [(2, 1), (2, 2), (3, 2), (3, 3), (3, 4)], [(2, 1), (3, 1), (3,
-#  2), (3, 3), (3, 4)]]
-#     paths2 = [[(1, 2), (1, 3), (2, 3), (3, 3), (4, 3)], [(1, 2), (2, 2), (2, 3), (3, 3), (4, 3)], [(1, 2), (2, 2), (3, 2), (3, 3), (4, 3)], [(1, 2), (2, 2), (3, 2), (4, 2), (4, 3)]]
+# #     paths1 = [[(2, 1), (2, 2), (2, 3), (2, 4), (3, 4)], [(2, 1), (2, 2), (2, 3), (3, 3), (3, 4)], [(2, 1), (2, 2), (3, 2), (3, 3), (3, 4)], [(2, 1), (3, 1), (3,
+# #  2), (3, 3), (3, 4)]]
+# #     paths2 = [[(1, 2), (1, 3), (2, 3), (3, 3), (4, 3)], [(1, 2), (2, 2), (2, 3), (3, 3), (4, 3)], [(1, 2), (2, 2), (3, 2), (3, 3), (4, 3)], [(1, 2), (2, 2), (3, 2), (4, 2), (4, 3)]]
 
-    paths1 = [[(2, 1), (2, 2), (2, 3), (2, 4), (3, 4)], [(2, 1), (2, 2), (2, 3), (3, 3), (3, 4)], [(2, 1), (2, 2), (3, 2), (3, 3), (3, 4)], [(2, 1), (3, 1), (3, 2), (3, 3), (3, 4)]]
-    paths2 = [[(1, 2), (1, 3), (1, 4)]]
+#     paths1 = [[(2, 1), (2, 2), (2, 3), (2, 4), (3, 4)], [(2, 1), (2, 2), (2, 3), (3, 3), (3, 4)], [(2, 1), (2, 2), (3, 2), (3, 3), (3, 4)], [(2, 1), (3, 1), (3, 2), (3, 3), (3, 4)]]
+#     paths2 = [[(1, 2), (1, 3), (1, 4)]]
 
-    jointMDD_root = buildJointMDD(paths1, paths2)
+#     jointMDD_root = buildJointMDD(paths1, paths2)
 
-    displayLayer(jointMDD_root, 0)
+#     displayLayer(jointMDD_root, 0)
 
-    #      (2,1)
-    #    /    |
-    # (3,1)  (2,2)
-    #   |   /   |
-    # (3,2)   (2,3)
-    #  |    /   |
-    # (3,3)   (2,4)
-    #  |     /
-    #  (3,4)
+#     #      (2,1)
+#     #    /    |
+#     # (3,1)  (2,2)
+#     #   |   /   |
+#     # (3,2)   (2,3)
+#     #  |    /   |
+#     # (3,3)   (2,4)
+#     #  |     /
+#     #  (3,4)
 
-if __name__ == "__main__":
-    main()
+# if __name__ == "__main__":
+#     main()

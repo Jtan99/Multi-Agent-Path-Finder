@@ -8,7 +8,7 @@ def get_cg_heuristic(my_map, paths, starts, goals, low_level_h):
         paths1 = get_all_optimal_paths(my_map, starts[i], goals[i], low_level_h[i])
         # print(f"All optimal paths for agent {i}: {paths1}")
         root1, nodes_dict1 = buildMDDTree(paths1)
-        displayLayer(root1, 0)
+        # displayLayer(root1, 0)
 
         for j in range(i+1,len(paths)):
             paths2 = get_all_optimal_paths(my_map, starts[j], goals[j], low_level_h[j])
@@ -19,7 +19,7 @@ def get_cg_heuristic(my_map, paths, starts, goals, low_level_h):
             
             if (check_MDDs_for_conflict(nodes_dict1, nodes_dict2)):
                 cardinal_conflicts.append((i,j))
-    print("Cardinal conflicts found:", cardinal_conflicts)
+    # print("Cardinal conflicts found:", cardinal_conflicts)
     
     g = Graph(len(paths))
     for conflict in cardinal_conflicts:
@@ -55,7 +55,7 @@ def check_MDDs_for_conflict(node_dict1, node_dict2):
             dict2[last_timestep+i+1] = dict2[last_timestep]
     else:
         #extend dict1
-        last_timestep = max(dict2.keys())
+        last_timestep = max(dict1.keys())
         for i in range(diff):
             dict1[last_timestep+i+1] = dict1[last_timestep]
         
