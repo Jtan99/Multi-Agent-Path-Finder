@@ -6,7 +6,8 @@ from cbs import CBSSolver
 from independent import IndependentSolver
 from prioritized import PrioritizedPlanningSolver
 from visualize import Animation
-from single_agent_planner import get_sum_of_cost
+from single_agent_planner import get_sum_of_cost, compute_heuristics
+from heuristics import get_cg_heuristic
 
 SOLVER = "CBS"
 

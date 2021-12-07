@@ -167,10 +167,12 @@ def check_agent_pos_constrained(curr, constraint_table):
 
 def push_node(open_list, node):
     heapq.heappush(open_list, (node['g_val'] + node['h_val'], node['h_val'], node['loc'], node))
+    # print('pushing node', node)
 
 
 def pop_node(open_list):
     _, _, _, curr = heapq.heappop(open_list)
+    # print("popping node", curr)
     return curr
 
 
@@ -219,17 +221,23 @@ def a_star(my_map, start_loc, goal_loc, h_values, agent, constraints):
     ##############################
     # Task 1.1: Extend the A* search to search in the space-time domain
     #           rather than space domain, only.
-
+    
     open_list = []
     closed_list = dict() #contains list of already expanded nodes
     earliest_goal_timestep = 0
     h_value = h_values[start_loc]
     constraint_table = build_constraint_table(constraints, agent)
     pos_constraint_table = build_constraint_table_with_pos(constraints, agent)
-    root = {'loc': start_loc, 'g_val': 0, 'h_val': h_value, 'parent': None, 'time': 0}
+    n = len(my_map[0])
+
+    root = {'loc': start_loc, 'g_val': 0, 'h_val': h_value, 'parent': None, 'time': 0, 'empty_loc': (n-2, n-2)}
+    print("root is", root)
     push_node(open_list, root)
     closed_list[(root['loc'], root['time'])] = root
+
+
     while len(open_list) > 0:
+        print("start of loop")
         curr = pop_node(open_list)
         #############################
         # Task 1.4: Adjust the goal test condition to handle goal constraints
@@ -254,14 +262,16 @@ def a_star(my_map, start_loc, goal_loc, h_values, agent, constraints):
             possible_locs = []
             for dir in range(5): 
                 possible_locs.append(move(curr['loc'], dir))
-            if next_loc not in possible_locs:
+            if next_loc not in possible_locs or next_loc != curr['empty_loc']:
                 continue
 
             child = {'loc': next_loc,
                     'g_val': curr['g_val'] + 1,
                     'h_val': h_values[next_loc],
                     'parent': curr,
-                    'time': curr['time'] + 1}
+                    'time': curr['time'] + 1,
+                    'empty_loc': curr['loc']
+                    }
 
             if (child['loc'], child['time']) in closed_list:
                 existing_node = closed_list[(child['loc'], child['time'])]
@@ -278,18 +288,20 @@ def a_star(my_map, start_loc, goal_loc, h_values, agent, constraints):
             if child_loc[0] < 0 or child_loc[0] >= len(my_map) \
                or child_loc[1] < 0 or child_loc[1] >= len(my_map[0]):
                continue            
-            if my_map[child_loc[0]][child_loc[1]]:
+            if my_map[child_loc[0]][child_loc[1]] or child_loc != curr['empty_loc']:
                 continue
             child = {'loc': child_loc,
                     'g_val': curr['g_val'] + 1,
                     'h_val': h_values[child_loc],
                     'parent': curr,
-                    'time': curr['time'] + 1}
+                    'time': curr['time'] + 1,
+                    'empty_loc': curr['loc']
+                    }
 
             # max possible path length = num_open_cells - #higher priority agents
             # max possible timestep is one below that
-            if child['time'] >= num_open_cells - agent:
-                return None
+            # if child['time'] >= num_open_cells - agent:
+            #     return None
 
             if is_pos_constrained(curr['loc'], child['loc'], child['time'], pos_constraint_table):
                 # a positive constraint on another agent means negative on this agent

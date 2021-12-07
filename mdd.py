@@ -128,15 +128,17 @@ def get_all_optimal_paths(my_map, start_loc, goal_loc, h_values):
 
 class MDDNode():
 
-    def __init__(self, location):
+    def __init__(self, location, timestep):
         self.parent = []
         self.children = []
         self.location = location
+        self.timestep = timestep
 
     def display(self):
         print("Parent:", [o.location for o in self.parent])
         print("Location:", self.location)
         print("Children:", [o.location for o in self.children])
+        print("Timestep:", self.timestep)
         print(self)
 
     def updateNode(self, parent):
@@ -182,19 +184,22 @@ def displayLayer(node, level):
     
 def buildMDDTree(optimal_paths):
     root_location = optimal_paths[0][0]
-    root_node = MDDNode(root_location)
+    root_node = MDDNode(root_location, 0)
     # curr = root_node
 
     existing_nodes = {
         root_location: root_node
     }
+
     for path in optimal_paths:
         curr = root_node
-        for location in path[1:]:
+        # for location in path[1:]:
+        for i in range(1, len(path)):
+            location = path[i]
             if location in existing_nodes:
                 new_node = existing_nodes[location]
             else:
-                new_node = MDDNode(location)
+                new_node = MDDNode(location, i)
                 existing_nodes[location] = new_node
             new_node.updateNode(curr)
             
@@ -206,7 +211,8 @@ def extendMDDTree(goal_node, height_diff):
     curr = goal_node
     for i in range(height_diff):
         # print(f"extending {goal_node.location} once")
-        new_node = MDDNode(goal_node.location)
+                
+        new_node = MDDNode(goal_node.location, curr.timestep + 1)
         new_node.updateNode(curr) # add to bottom of tree
         curr = new_node
         # print("new node: ", new_node.display())

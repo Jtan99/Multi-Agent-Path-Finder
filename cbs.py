@@ -3,6 +3,7 @@ import heapq
 import random
 from single_agent_planner import compute_heuristics, a_star, get_location, get_sum_of_cost
 import copy
+from heuristics import *
 
 def detect_collision(path1, path2):
     ##############################
@@ -243,7 +244,8 @@ class CBSSolver(object):
             self.heuristics.append(compute_heuristics(my_map, goal))
 
     def push_node(self, node):
-        heapq.heappush(self.open_list, (node['cost'], len(node['collisions']), self.num_of_generated, node))
+        # heapq.heappush(self.open_list, (node['cost'], len(node['collisions']), self.num_of_generated, node))
+        heapq.heappush(self.open_list, (node['cost'] + node['h'], len(node['collisions']), self.num_of_generated, node))
         # print("Generate node {}".format(self.num_of_generated))
         self.num_of_generated += 1
 
@@ -268,6 +270,7 @@ class CBSSolver(object):
         #               [[(x11, y11), (x12, y12), ...], [(x21, y21), (x22, y22), ...], ...]
         # collisions     - list of collisions in paths
         root = {'cost': 0,
+                'h': 0,
                 'constraints': [],
                 'paths': [],
                 'collisions': []}
@@ -279,6 +282,10 @@ class CBSSolver(object):
             root['paths'].append(path)
 
         root['cost'] = get_sum_of_cost(root['paths'])
+
+        root['h'] = get_cg_heuristic(self.my_map, root['paths'], self.starts, self.goals, self.heuristics)
+        # root['h'] = get_dg_heuristic(root['paths']) 
+        # root['h'] = get_wdg_heuristic(root['paths'])
         root['collisions'] = detect_collisions(root['paths'])
         self.push_node(root)
 
@@ -323,12 +330,12 @@ class CBSSolver(object):
                     for i in conflicted_agents:
                         new_path = a_star(self.my_map, self.starts[i], self.goals[i], self.heuristics[i],
                             i, child['constraints'])
-                        # if new_path is None:
-                        #     prune_child = True
-                        #     break
-                        # else:
-                            # child['paths'][i] = new_path
-                        child['paths'][i] = new_path
+                        if new_path is None:
+                            prune_child = True
+                            break
+                        else:
+                            child['paths'][i] = new_path
+                        # child['paths'][i] = new_path
                 if prune_child:
                     continue
 
@@ -339,6 +346,7 @@ class CBSSolver(object):
                     child['paths'][agent] = path
                     child['collisions'] = detect_collisions(child['paths'])
                     child['cost'] = get_sum_of_cost(child['paths'])
+                    child['h'] = get_cg_heuristic(self.my_map, child['paths'], self.starts, self.goals, self.heuristics)
                     self.push_node(child)
 
         self.print_results(root)
