@@ -1,5 +1,6 @@
 from mdd import *
 from mvc import *
+from single_agent_planner import a_star
 
 def get_cg_heuristic(my_map, paths, starts, goals, low_level_h, constraints):
     cardinal_conflicts = []
@@ -9,9 +10,9 @@ def get_cg_heuristic(my_map, paths, starts, goals, low_level_h, constraints):
     all_paths = []
     all_mdds = []
     for i in range(len(paths)):
-        path = get_all_optimal_paths(my_map, starts[i], goals[i], low_level_h[i], i, constraints)
-        _, nodes_dict = buildMDDTree(path)
-        all_paths.append(path)
+        paths = get_all_optimal_paths(my_map, starts[i], goals[i], low_level_h[i], i, constraints)
+        _, nodes_dict = buildMDDTree(paths)
+        all_paths.append(paths)
         all_mdds.append(nodes_dict)
         
 

@@ -284,8 +284,8 @@ class CBSSolver(object):
         root['cost'] = get_sum_of_cost(root['paths'])
 
         # root['h'] = 0
-        root['h'] = get_cg_heuristic(self.my_map, root['paths'], self.starts, self.goals, self.heuristics, root['constraints'])
-        # root['h'] = get_dg_heuristic(self.my_map, root['paths'], self.starts, self.goals, self.heuristics, root['constraints']) 
+        # root['h'] = get_cg_heuristic(self.my_map, root['paths'], self.starts, self.goals, self.heuristics, root['constraints'])
+        root['h'] = get_dg_heuristic(self.my_map, root['paths'], self.starts, self.goals, self.heuristics, root['constraints']) 
         # root['h'] = get_wdg_heuristic(root['paths'])
         root['collisions'] = detect_collisions(root['paths'])
         self.push_node(root)
@@ -347,8 +347,8 @@ class CBSSolver(object):
                     child['collisions'] = detect_collisions(child['paths'])
                     child['cost'] = get_sum_of_cost(child['paths'])
                     # child['h'] = 0
-                    child['h'] = get_cg_heuristic(self.my_map, child['paths'], self.starts, self.goals, self.heuristics, child['constraints'])
-                    # child['h'] = get_dg_heuristic(self.my_map, child['paths'], self.starts, self.goals, self.heuristics, child['constraints'])
+                    # child['h'] = get_cg_heuristic(self.my_map, child['paths'], self.starts, self.goals, self.heuristics, child['constraints'])
+                    child['h'] = get_dg_heuristic(self.my_map, child['paths'], self.starts, self.goals, self.heuristics, child['constraints'])
 
                     self.push_node(child)
 

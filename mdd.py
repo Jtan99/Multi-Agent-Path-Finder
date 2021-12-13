@@ -115,6 +115,39 @@ def get_all_optimal_paths(my_map, start_loc, goal_loc, h_values, agent, constrai
         if next_loc == ():
             continue
 
+        if next_loc != None:
+            if is_pos_constrained(curr['loc'], next_loc, curr['time'] + 1, pos_constraint_table):
+                # this move violates a positive constraint from another agent
+                continue
+
+            if next_loc[0] < 0 or next_loc[0] >= len(my_map) \
+                or next_loc[1] < 0 or next_loc[1] >= len(my_map[0]):
+                return paths
+            if my_map[next_loc[0]][next_loc[1]]:
+                return paths
+
+            possible_locs = []
+            for dir in range(5): 
+                possible_locs.append(move(curr['loc'], dir))
+            if next_loc not in possible_locs:
+                continue
+
+            child = {'loc': next_loc,
+                    'g_val': curr['g_val'] + 1,
+                    'h_val': h_values[next_loc],
+                    'parent': curr,
+                    'time': curr['time'] + 1}
+
+            if (child['loc'], child['time']) in closed_list:
+                existing_node = closed_list[(child['loc'], child['time'])]
+                if compare_nodes(child, existing_node):
+                    closed_list[(child['loc'], child['time'])] = child
+                    push_node(open_list, child)
+            else:
+                closed_list[(child['loc'], child['time'])] = child
+                push_node(open_list, child)
+            continue
+
         for dir in range(5):
             child_loc = move(curr['loc'], dir)
             if child_loc[0] < 0 or child_loc[0] >= len(my_map) \
@@ -223,15 +256,17 @@ def buildMDDTree(optimal_paths):
 
     return root_node, existing_nodes
 
-def extendMDDTree(goal_node, height_diff):
+def extendMDDTree(goal_node, height_diff, node_dict):
     curr = goal_node
     for i in range(height_diff):
         # print(f"extending {goal_node.location} once")
                 
         new_node = MDDNode(goal_node.location, curr.timestep + 1)
         new_node.updateNode(curr) # add to bottom of tree
+        node_dict[(goal_node.location, curr.timestep + 1)] = new_node
         curr = new_node
         # print("new node: ", new_node.display())
+
     
     
 def buildJointMDD(paths1, paths2, root1, node_dict1, root2, node_dict2):
@@ -246,14 +281,14 @@ def buildJointMDD(paths1, paths2, root1, node_dict1, root2, node_dict2):
         if (height1 < height2):
             # first mdd shorter
             goal_loc = paths1[0][-1]
-            bottom_node = node_dict1[goal_loc]
-            extendMDDTree(bottom_node, height2-height1)
+            bottom_node = node_dict1[(goal_loc, height1-1)]
+            extendMDDTree(bottom_node, height2-height1, node_dict1)
             
         else:
             # second is shorter
             goal_loc = paths2[0][-1]
-            bottom_node = node_dict2[goal_loc]
-            extendMDDTree(bottom_node, height1-height2)
+            bottom_node = node_dict2[(goal_loc, height2-1)]
+            extendMDDTree(bottom_node, height1-height2, node_dict2)
 
     # print(node_dict2)
     # displayLayer(node_dict2[paths2[0][0]] , 0)  
@@ -287,7 +322,7 @@ def buildJointMDD(paths1, paths2, root1, node_dict1, root2, node_dict2):
                 loc_combinations.append((node1_child.location, node2_child.location))
 
         # print("DEBUG:", loc_combinations)
-
+        new_node = None
         for combo in loc_combinations:
             if (combo[0] == combo[1]):
                 continue
@@ -301,7 +336,8 @@ def buildJointMDD(paths1, paths2, root1, node_dict1, root2, node_dict2):
                 existing_dict[params] = new_node
                 q.put(new_node)
             new_node.updateNode(curr)
-
+    if (new_node == None):
+        new_node = curr
     return root, new_node
             
 #         # call helper method generateChildren(joint-node)
