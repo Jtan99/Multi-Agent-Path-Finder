@@ -208,7 +208,7 @@ def buildMDDTree(optimal_paths):
     # curr = root_node
 
     existing_nodes = {
-        root_location: root_node
+        (root_location, 0): root_node
     }
 
     for path in optimal_paths:
@@ -216,13 +216,9 @@ def buildMDDTree(optimal_paths):
         # for location in path[1:]:
         for i in range(1, len(path)):
             location = path[i]
-            if location in existing_nodes:
-                new_node = existing_nodes[location]
-            else:
-                new_node = MDDNode(location, i)
-                existing_nodes[location] = new_node
+            new_node = MDDNode(location, i)
+            existing_nodes[(location, i)] = new_node
             new_node.updateNode(curr)
-            
             curr = new_node
 
     return root_node, existing_nodes
@@ -266,7 +262,7 @@ def buildJointMDD(paths1, paths2, root1, node_dict1, root2, node_dict2):
     q = queue.Queue()
     root = JointMDDNode(root1.location, root2.location, 0)
     q.put(root)
-    
+
     # while open list not empty
     existing_dict = {
         (root1.location, root2.location, 0): root
@@ -276,15 +272,11 @@ def buildJointMDD(paths1, paths2, root1, node_dict1, root2, node_dict2):
     # pop one node from open list
         curr = q.get()
 
-        loc1 = curr.location[0]
-        loc2 = curr.location[1]
+        (loc1,time1) = curr.location[0], curr.timestep
+        (loc2,time2) = curr.location[1], curr.timestep
 
-        node1 = node_dict1[loc1]
-        node2 = node_dict2[loc2]
-
-
-        print("DEBUG: node1 timestep", node1.timestep)
-        print("DEBUG: node2 timestep", node2.timestep)
+        node1 = node_dict1[(loc1, time1)]
+        node2 = node_dict2[(loc2, time2)]
 
         if (len(node1.children) == 0 or len(node2.children) == 0):
             continue

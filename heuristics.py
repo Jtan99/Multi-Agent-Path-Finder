@@ -51,29 +51,29 @@ def check_MDDs_for_conflict(node_dict1, node_dict2):
 
     dict1 = {} # timestep: [location]
     dict2 = {}
-    for loc, node in node_dict1.items():
+    for (loc,time) in node_dict1.keys():
         # build dict
-        if node.timestep in dict1: # if this timestep was original mdd
-            dict1[node.timestep].append(loc)
+        if time in dict1: # if this timestep was original mdd
+            dict1[time].append(loc)
         else: 
-            dict1[node.timestep] = [loc]
+            dict1[time] = [loc]
 
-    for loc, node in node_dict2.items():
+    for (loc,time) in node_dict2.keys():
         # build dict
-        if node.timestep in dict2:
-            dict2[node.timestep].append(loc)
+        if time in dict2:
+            dict2[time].append(loc)
         else:
-            dict2[node.timestep] = [loc]
+            dict2[time] = [loc]
 
-    lst = list(dict1.keys())
-    missing_timesteps_1 = [x for x in range(lst[0], lst[-1]+1) if x not in lst] # returns the missing timesteps
-    lst = list(dict2.keys())
-    missing_timesteps_2 = [x for x in range(lst[0], lst[-1]+1) if x not in lst] # returns the missing timesteps
+    # lst = list(dict1.keys())
+    # missing_timesteps_1 = [x for x in range(lst[0], lst[-1]+1) if x not in lst] # returns the missing timesteps
+    # lst = list(dict2.keys())
+    # missing_timesteps_2 = [x for x in range(lst[0], lst[-1]+1) if x not in lst] # returns the missing timesteps
 
-    for timestep in missing_timesteps_1:
-        dict1[timestep] = dict1[timestep-1]
-    for timestep in missing_timesteps_2:
-        dict2[timestep] = dict2[timestep-1]
+    # for timestep in missing_timesteps_1:
+    #     dict1[timestep] = dict1[timestep-1]
+    # for timestep in missing_timesteps_2:
+    #     dict2[timestep] = dict2[timestep-1]
 
     #extend dictionary
     diff = abs(len(dict1) - len(dict2))
@@ -104,13 +104,13 @@ def balanceMDDs(paths1, paths2, node_dict1, node_dict2):
         if (height1 < height2):
             # first mdd shorter
             goal_loc = paths1[0][-1]
-            bottom_node = node_dict1[goal_loc]
+            bottom_node = node_dict1[(goal_loc, height1-1)]
             extendMDDTree(bottom_node, height2-height1)
             
         else:
             # second is shorter
             goal_loc = paths2[0][-1]
-            bottom_node = node_dict2[goal_loc]
+            bottom_node = node_dict2[(goal_loc, height2-1)]
             extendMDDTree(bottom_node, height1-height2)
 
 def get_dg_heuristic(my_map, paths, starts, goals, low_level_h, constraints):
