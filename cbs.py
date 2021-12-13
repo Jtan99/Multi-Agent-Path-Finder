@@ -246,7 +246,7 @@ class CBSSolver(object):
     def push_node(self, node):
         # heapq.heappush(self.open_list, (node['cost'], len(node['collisions']), self.num_of_generated, node))
         heapq.heappush(self.open_list, (node['cost'] + node['h'], len(node['collisions']), self.num_of_generated, node))
-        print("Generate node {}".format(self.num_of_generated))
+        # print("Generate node {}".format(self.num_of_generated))
         self.num_of_generated += 1
 
     def pop_node(self):
@@ -283,8 +283,9 @@ class CBSSolver(object):
 
         root['cost'] = get_sum_of_cost(root['paths'])
 
-        root['h'] = get_cg_heuristic(self.my_map, root['paths'], self.starts, self.goals, self.heuristics)
-        # root['h'] = get_dg_heuristic(root['paths']) 
+        # root['h'] = 0
+        # root['h'] = get_cg_heuristic(self.my_map, root['paths'], self.starts, self.goals, self.heuristics, root['constraints'])
+        root['h'] = get_dg_heuristic(self.my_map, root['paths'], self.starts, self.goals, self.heuristics, root['constraints']) 
         # root['h'] = get_wdg_heuristic(root['paths'])
         root['collisions'] = detect_collisions(root['paths'])
         self.push_node(root)
@@ -345,7 +346,10 @@ class CBSSolver(object):
                     child['paths'][agent] = path
                     child['collisions'] = detect_collisions(child['paths'])
                     child['cost'] = get_sum_of_cost(child['paths'])
-                    child['h'] = get_cg_heuristic(self.my_map, child['paths'], self.starts, self.goals, self.heuristics)
+                    # child['h'] = 0
+                    # child['h'] = get_cg_heuristic(self.my_map, child['paths'], self.starts, self.goals, self.heuristics, child['constraints'])
+                    child['h'] = get_dg_heuristic(self.my_map, child['paths'], self.starts, self.goals, self.heuristics, child['constraints'])
+
                     self.push_node(child)
 
         self.print_results(root)
@@ -362,3 +366,4 @@ class CBSSolver(object):
         print("Sum of costs:    {}".format(get_sum_of_cost(node['paths'])))
         print("Expanded nodes:  {}".format(self.num_of_expanded))
         print("Generated nodes: {}".format(self.num_of_generated))
+        #write to file

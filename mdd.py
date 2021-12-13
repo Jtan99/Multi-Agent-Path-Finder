@@ -1,5 +1,6 @@
 import heapq
 import queue
+from single_agent_planner import build_constraint_table, build_constraint_table_with_pos, check_agent_pos_constrained, is_pos_constrained, is_constrained
 
 class NodeDictWrap(dict):
 
@@ -18,7 +19,7 @@ class NodeDictWrap(dict):
 
 
 def move(loc, dir):
-    directions = [(0, -1), (1, 0), (0, 1), (-1, 0)]
+    directions = [(0, -1), (1, 0), (0, 1), (-1, 0), (0, 0)]
     return loc[0] + directions[dir][0], loc[1] + directions[dir][1]
 
 
@@ -79,7 +80,7 @@ def compare_nodes(n1, n2):
     """Return true is n1 is better than n2."""
     return n1['g_val'] + n1['h_val'] < n2['g_val'] + n2['h_val']
 
-def get_all_optimal_paths(my_map, start_loc, goal_loc, h_values):
+def get_all_optimal_paths(my_map, start_loc, goal_loc, h_values, agent, constraints):
     """ my_map      - binary obstacle map
         start_loc   - start position
         goal_loc    - goal position
@@ -90,6 +91,8 @@ def get_all_optimal_paths(my_map, start_loc, goal_loc, h_values):
     first_time = True
     paths = []
     h_value = h_values[start_loc]
+    constraint_table = build_constraint_table(constraints, agent)
+    pos_constraint_table = build_constraint_table_with_pos(constraints, agent)    
     root = {'loc': start_loc, 'g_val': 0, 'h_val': h_value, 'parent': None, 'time': 0}
     push_node(open_list, root)
     closed_list[(root['loc'], root['time'])] = root
@@ -108,7 +111,11 @@ def get_all_optimal_paths(my_map, start_loc, goal_loc, h_values):
             paths.append(curr_path)
             continue
 
-        for dir in range(4):
+        next_loc = check_agent_pos_constrained(curr, constraint_table)
+        if next_loc == ():
+            continue
+
+        for dir in range(5):
             child_loc = move(curr['loc'], dir)
             if child_loc[0] < 0 or child_loc[0] >= len(my_map) \
                or child_loc[1] < 0 or child_loc[1] >= len(my_map[0]):
@@ -120,10 +127,23 @@ def get_all_optimal_paths(my_map, start_loc, goal_loc, h_values):
                     'h_val': h_values[child_loc],
                     'parent': curr,
                     'time': curr['time'] + 1}
-            
-            closed_list[(child['loc'], child['time'])] = child
-            push_node(open_list, child)
 
+            if is_pos_constrained(curr['loc'], child['loc'], child['time'], pos_constraint_table):
+                # a positive constraint on another agent means negative on this agent
+                continue
+
+            if is_constrained(curr['loc'], child['loc'], child['time'], constraint_table):
+                # we dont want to do this move
+                continue
+            
+            if (child['loc'], child['time']) in closed_list:
+                existing_node = closed_list[(child['loc'], child['time'])]
+                if compare_nodes(child, existing_node):
+                    closed_list[(child['loc'], child['time'])] = child
+                    push_node(open_list, child)
+            else:
+                closed_list[(child['loc'], child['time'])] = child
+                push_node(open_list, child)
     return paths  # Failed to find solutions
 
 class MDDNode():
@@ -218,83 +238,79 @@ def extendMDDTree(goal_node, height_diff):
         # print("new node: ", new_node.display())
     
     
-# def buildJointMDD(paths1, paths2):
+def buildJointMDD(paths1, paths2, root1, node_dict1, root2, node_dict2):
+    height1 = len(paths1[0])
+    height2 = len(paths2[0])
 
-#     root1, node_dict1 = buildMDDTree(paths1)
-#     root2, node_dict2 = buildMDDTree(paths2)
-        
-#     height1 = len(paths1[0])
-#     height2 = len(paths2[0])
+    # pseudo
 
-#     # pseudo
-
-#     # Balance both mdds:
-#         # if one is shorter, extend it to same length by duplicating bottom node
-#     if (height1 != height2):
-#         if (height1 < height2):
-#             # first mdd shorter
-#             goal_loc = paths1[0][-1]
-#             bottom_node = node_dict1[goal_loc]
-#             extendMDDTree(bottom_node, height2-height1)
+    # Balance both mdds:
+        # if one is shorter, extend it to same length by duplicating bottom node
+    if (height1 != height2):
+        if (height1 < height2):
+            # first mdd shorter
+            goal_loc = paths1[0][-1]
+            bottom_node = node_dict1[goal_loc]
+            extendMDDTree(bottom_node, height2-height1)
             
-#         else:
-#             # second is shorter
-#             goal_loc = paths2[0][-1]
-#             bottom_node = node_dict2[goal_loc]
-#             extendMDDTree(bottom_node, height1-height2)
+        else:
+            # second is shorter
+            goal_loc = paths2[0][-1]
+            bottom_node = node_dict2[goal_loc]
+            extendMDDTree(bottom_node, height1-height2)
 
-#     # print(node_dict2)
-#     # displayLayer(node_dict2[paths2[0][0]] , 0)
-                
-            
+    # print(node_dict2)
+    # displayLayer(node_dict2[paths2[0][0]] , 0)  
+    # build root node for jointmdd
+    # add it to open list
+    q = queue.Queue()
+    root = JointMDDNode(root1.location, root2.location, 0)
+    q.put(root)
     
-#     # build root node for jointmdd
-#     # add it to open list
-#     q = queue.Queue()
-#     root = JointMDDNode(root1.location, root2.location, 0)
-#     q.put(root)
-
-#     # while open list not empty
-#     existing_dict = {
-#         (root1.location, root2.location, 0): root
-#     }
+    # while open list not empty
+    existing_dict = {
+        (root1.location, root2.location, 0): root
+    }
     
-#     while (not q.empty()):
-#         print('inside loop')
-#     # pop one node from open list
-#         curr = q.get()
+    while (not q.empty()):
+    # pop one node from open list
+        curr = q.get()
 
-#         loc1 = curr.location[0]
-#         loc2 = curr.location[1]
+        loc1 = curr.location[0]
+        loc2 = curr.location[1]
 
-#         node1 = node_dict1[loc1]
-#         node2 = node_dict2[loc2]
+        node1 = node_dict1[loc1]
+        node2 = node_dict2[loc2]
 
-#         if (len(node1.children) == 0 or len(node2.children) == 0):
-#             print('heya')
-#             continue
+
+        print("DEBUG: node1 timestep", node1.timestep)
+        print("DEBUG: node2 timestep", node2.timestep)
+
+        if (len(node1.children) == 0 or len(node2.children) == 0):
+            continue
         
-#         loc_combinations = []
-#         for node1_child in node1.children:
-#             for node2_child in node2.children:
-#                 loc_combinations.append((node1_child.location, node2_child.location))
+        loc_combinations = []
+        for node1_child in node1.children:
+            for node2_child in node2.children:
+                loc_combinations.append((node1_child.location, node2_child.location))
 
-#         # print("DEBUG:", loc_combinations)
+        # print("DEBUG:", loc_combinations)
 
-#         for combo in loc_combinations:
-#             if (combo[0] == combo[1]):
-#                 continue
-#             # create node if needed
-#             params = (combo[0], combo[1], curr.timestep+1)
-#             if (params in existing_dict):
-#                 # add relationship
-#                 new_node = existing_dict[params]
-#             else:
-#                 new_node = JointMDDNode(combo[0], combo[1], curr.timestep+1)
-#                 existing_dict[params] = new_node
-#                 q.put(new_node)
-#             new_node.updateNode(curr)
-#     return root
+        for combo in loc_combinations:
+            if (combo[0] == combo[1]):
+                continue
+            # create node if needed
+            params = (combo[0], combo[1], curr.timestep+1)
+            if (params in existing_dict):
+                # add relationship
+                new_node = existing_dict[params]
+            else:
+                new_node = JointMDDNode(combo[0], combo[1], curr.timestep+1)
+                existing_dict[params] = new_node
+                q.put(new_node)
+            new_node.updateNode(curr)
+
+    return root, new_node
             
 #         # call helper method generateChildren(joint-node)
 #             # get children of both locations from the dicts
