@@ -96,6 +96,18 @@ if __name__ == '__main__':
             print("***Run CBS***")
             cbs = CBSSolver(my_map, starts, goals)
             paths = cbs.find_solution(args.disjoint)
+        elif args.solver == "CBS_cg":
+            print("***Run CBS***")
+            cbs = CBSSolver(my_map, starts, goals)
+            paths = cbs.find_solution_cg(args.disjoint)
+        elif args.solver == "CBS_dg":
+            print("***Run CBS***")
+            cbs = CBSSolver(my_map, starts, goals)
+            paths = cbs.find_solution_dg(args.disjoint)
+        elif args.solver == "CBS_wdg":
+            print("***Run CBS***")
+            cbs = CBSSolver(my_map, starts, goals)
+            paths = cbs.find_solution_wdg(args.disjoint)
         elif args.solver == "Independent":
             print("***Run Independent***")
             solver = IndependentSolver(my_map, starts, goals)

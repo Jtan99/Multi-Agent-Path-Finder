@@ -1,6 +1,7 @@
 from mdd import *
 from mvc import *
-from single_agent_planner import a_star
+from single_agent_planner import a_star, get_sum_of_cost
+from cbs_cg import CBSSolver
 
 def get_cg_heuristic(my_map, paths, starts, goals, low_level_h, constraints):
     cardinal_conflicts = []
@@ -159,3 +160,72 @@ def check_jointMDD_for_dependency(bottom_node, paths1, paths2):
     if (bottom_node.location != [(goal_loc1),(goal_loc2)] or bottom_node.timestep != optimal_time):
         return True
     return False
+
+def get_wdg_heuristic(my_map, paths, starts, goals, low_level_h, constraints):
+    dependencies = []
+
+    all_roots = []
+    all_paths = []
+    all_mdds = []
+
+    for i in range(len(paths)):
+        path = get_all_optimal_paths(my_map, starts[i], goals[i], low_level_h[i], i, constraints)
+        root, nodes_dict = buildMDDTree(path)
+        all_roots.append(root)
+        all_paths.append(path)
+        all_mdds.append(nodes_dict)
+
+    for i in range(len(paths)): # num of agents in map
+        paths1 = all_paths[i]
+        root1 = all_roots[i]
+        node_dict1 = all_mdds[i]
+
+        for j in range(i+1,len(paths)):
+            paths2 = all_paths[j]
+            root2 = all_roots[j]
+            node_dict2 = all_mdds[j]
+            
+            root, bottom_node = buildJointMDD(paths1, paths2, root1, node_dict1, root2, node_dict2)
+
+            if (check_jointMDD_for_dependency(bottom_node, paths1, paths2)):
+                dependencies.append((i,j))
+
+    g = WeightedGraph(list(range(len(paths))))
+    for dependency in dependencies:
+        agent1 = dependency[0]
+        agent2 = dependency[1]
+        new_starts = [starts[agent1], starts[agent2]]
+        new_goals = [goals[agent1], goals[agent2]]
+        cbs = CBSSolver(my_map, new_starts, new_goals)
+        paths = cbs.find_solution_cg(root_constraints=constraints, root_h=1)
+        min_cost = get_sum_of_cost(paths)
+        sum_indv_opt_paths = len(all_paths[agent1][0]) + len(all_paths[agent2][0])
+        edge_weight = sum_indv_opt_paths - min_cost
+
+        g.add_edge(dependency[0], dependency[1], edge_weight)
+
+    # g is the wdg graph
+    # either create our own branch and bound
+    # or figure out how to get an ilp solver working
+
+    #       [i] ---- 4 ---- [j]
+    #         \             /
+    #           3          2
+    #             \ [k]  /
+#       2 variables/vertex i, j 
+
+   #       [i] ---- 4 ---- [j]
+    #         \             /
+    #           1          1
+    #             \ [k]  /
+
+# node in the bnb queue                                                     (infinity, infinity)
+# iter 1- branch on all possible values of 1 variable (i)           (0, infinity, infinity) (1, infinity, infinity) (2, infinity, infinity) (3, infinity) (4, infinity) 
+                    #                                                   (0,4, infinity)       (1,3,infinity)       (2,2)           (3,1)       (4,0)
+                                                                # (0, 4, 3) 
+
+# a branch-and-bound algorithm that branches on the possible
+# values of each xi
+# in the component and prunes nodes using
+# the cost of the best result so far.
+    return 0
