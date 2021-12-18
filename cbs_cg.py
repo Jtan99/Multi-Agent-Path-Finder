@@ -3,7 +3,7 @@ import heapq
 import random
 from single_agent_planner import compute_heuristics, a_star, get_location, get_sum_of_cost
 import copy
-from heuristics import *
+from cg_heuristic import *
 
 def detect_collision(path1, path2):
     ##############################
@@ -256,77 +256,6 @@ class CBSSolver(object):
         # print("Expanded nodes {}".format(self.num_of_expanded))
         return node
 
-    def find_solution(self, disjoint=True):
-        """ Finds paths for all agents from their start locations to their goal locations
-
-        disjoint    - use disjoint splitting or not
-        """
-
-        self.start_time = timer.time()
-
-        root = {'cost': 0,
-                'h': 0,
-                'constraints': [],
-                'paths': [],
-                'collisions': []}
-        for i in range(self.num_of_agents):  # Find initial path for each agent
-            path = a_star(self.my_map, self.starts[i], self.goals[i], self.heuristics[i],
-                          i, root['constraints'])
-            if path is None:
-                raise BaseException('No solutions')
-            root['paths'].append(path)
-
-        root['cost'] = get_sum_of_cost(root['paths'])
-
-        root['h'] = 0
-        root['collisions'] = detect_collisions(root['paths'])
-        self.push_node(root)
-
-        while len(self.open_list) > 0:
-            curr = self.pop_node()
-
-            if not curr['collisions']:
-                self.print_results(curr)
-                return curr['paths'] # this is the goal node
-            
-            collision = curr['collisions'][0]
-            constraints = disjoint_splitting(collision)
-            for constraint in constraints:
-                if is_conflicting_constraint(constraint, curr['constraints']):
-                    continue
-                child = {}
-                child['constraints'] = copy.deepcopy(curr['constraints'])
-                if constraint not in child['constraints']:
-                    child['constraints'].append(constraint)
-                child['paths']= copy.deepcopy(curr['paths'])
-
-                prune_child = False
-                if constraint['positive']:
-                    conflicted_agents = paths_violate_constraint(constraint, child['paths'])
-                    for i in conflicted_agents:
-                        new_path = a_star(self.my_map, self.starts[i], self.goals[i], self.heuristics[i],
-                            i, child['constraints'])
-                        if new_path is None:
-                            prune_child = True
-                            break
-                        else:
-                            child['paths'][i] = new_path
-                if prune_child:
-                    continue
-
-                agent = constraint['agent']
-                path = a_star(self.my_map, self.starts[agent], self.goals[agent], self.heuristics[agent],
-                          agent, child['constraints'])
-                if path is not None:
-                    child['paths'][agent] = path
-                    child['collisions'] = detect_collisions(child['paths'])
-                    child['cost'] = get_sum_of_cost(child['paths'])
-                    child['h'] = 0
-                    self.push_node(child)
-
-        self.print_results(root)
-        return root['paths']
-
     def find_solution_cg(self, disjoint=True, root_constraints=[], root_h=0):
         """ Finds paths for all agents from their start locations to their goal locations
 
@@ -344,7 +273,7 @@ class CBSSolver(object):
             path = a_star(self.my_map, self.starts[i], self.goals[i], self.heuristics[i],
                           i, root['constraints'])
             if path is None:
-                raise BaseException('No solutions')
+                continue
             root['paths'].append(path)
 
         root['cost'] = get_sum_of_cost(root['paths'])
@@ -356,7 +285,7 @@ class CBSSolver(object):
             curr = self.pop_node()
 
             if not curr['collisions']:
-                self.print_results(curr)
+                # self.print_results(curr)
                 return curr['paths'] # this is the goal node
             
             collision = curr['collisions'][0]
@@ -396,152 +325,7 @@ class CBSSolver(object):
 
                     self.push_node(child)
 
-        self.print_results(root)
-        return root['paths']
-
-    def find_solution_dg(self, disjoint=True):
-        """ Finds paths for all agents from their start locations to their goal locations
-
-        disjoint    - use disjoint splitting or not
-        """
-
-        self.start_time = timer.time()
-
-        root = {'cost': 0,
-                'h': 0,
-                'constraints': [],
-                'paths': [],
-                'collisions': []}
-        for i in range(self.num_of_agents):  # Find initial path for each agent
-            path = a_star(self.my_map, self.starts[i], self.goals[i], self.heuristics[i],
-                          i, root['constraints'])
-            if path is None:
-                raise BaseException('No solutions')
-            root['paths'].append(path)
-
-        root['cost'] = get_sum_of_cost(root['paths'])
-        root['h'] = get_dg_heuristic(self.my_map, root['paths'], self.starts, self.goals, self.heuristics, root['constraints']) 
-        root['collisions'] = detect_collisions(root['paths'])
-        self.push_node(root)
-
-        while len(self.open_list) > 0:
-            curr = self.pop_node()
-
-            if not curr['collisions']:
-                self.print_results(curr)
-                return curr['paths'] # this is the goal node
-            
-            collision = curr['collisions'][0]
-            # constraints = standard_splitting(collision)
-            constraints = disjoint_splitting(collision)
-            for constraint in constraints:
-                if is_conflicting_constraint(constraint, curr['constraints']):
-                    continue
-                child = {}
-                child['constraints'] = copy.deepcopy(curr['constraints'])
-                if constraint not in child['constraints']:
-                    child['constraints'].append(constraint)
-                child['paths']= copy.deepcopy(curr['paths'])
-
-                prune_child = False
-                if constraint['positive']:
-                    conflicted_agents = paths_violate_constraint(constraint, child['paths'])
-                    for i in conflicted_agents:
-                        new_path = a_star(self.my_map, self.starts[i], self.goals[i], self.heuristics[i],
-                            i, child['constraints'])
-                        if new_path is None:
-                            prune_child = True
-                            break
-                        else:
-                            child['paths'][i] = new_path
-                if prune_child:
-                    continue
-
-                agent = constraint['agent']
-                path = a_star(self.my_map, self.starts[agent], self.goals[agent], self.heuristics[agent],
-                          agent, child['constraints'])
-                if path is not None:
-                    child['paths'][agent] = path
-                    child['collisions'] = detect_collisions(child['paths'])
-                    child['cost'] = get_sum_of_cost(child['paths'])
-                    child['h'] = get_dg_heuristic(self.my_map, child['paths'], self.starts, self.goals, self.heuristics, child['constraints'])
-
-                    self.push_node(child)
-
-        self.print_results(root)
-        return root['paths']
-    
-    def find_solution_wdg(self, disjoint=True):
-        """ Finds paths for all agents from their start locations to their goal locations
-
-        disjoint    - use disjoint splitting or not
-        """
-
-        self.start_time = timer.time()
-
-        root = {'cost': 0,
-                'h': 0,
-                'constraints': [],
-                'paths': [],
-                'collisions': []}
-        for i in range(self.num_of_agents):  # Find initial path for each agent
-            path = a_star(self.my_map, self.starts[i], self.goals[i], self.heuristics[i],
-                          i, root['constraints'])
-            if path is None:
-                raise BaseException('No solutions')
-            root['paths'].append(path)
-
-        root['cost'] = get_sum_of_cost(root['paths'])
-        root['h'] = get_wdg_heuristic(self.my_map, root['paths'], self.starts, self.goals, self.heuristics, root['constraints']) 
-    
-        root['collisions'] = detect_collisions(root['paths'])
-        self.push_node(root)
-
-        while len(self.open_list) > 0:
-            curr = self.pop_node()
-
-            if not curr['collisions']:
-                self.print_results(curr)
-                return curr['paths'] # this is the goal node
-            
-            collision = curr['collisions'][0]
-            # constraints = standard_splitting(collision)
-            constraints = disjoint_splitting(collision)
-            for constraint in constraints:
-                if is_conflicting_constraint(constraint, curr['constraints']):
-                    continue
-                child = {}
-                child['constraints'] = copy.deepcopy(curr['constraints'])
-                if constraint not in child['constraints']:
-                    child['constraints'].append(constraint)
-                child['paths']= copy.deepcopy(curr['paths'])
-
-                prune_child = False
-                if constraint['positive']:
-                    conflicted_agents = paths_violate_constraint(constraint, child['paths'])
-                    for i in conflicted_agents:
-                        new_path = a_star(self.my_map, self.starts[i], self.goals[i], self.heuristics[i],
-                            i, child['constraints'])
-                        if new_path is None:
-                            prune_child = True
-                            break
-                        else:
-                            child['paths'][i] = new_path
-                if prune_child:
-                    continue
-
-                agent = constraint['agent']
-                path = a_star(self.my_map, self.starts[agent], self.goals[agent], self.heuristics[agent],
-                          agent, child['constraints'])
-                if path is not None:
-                    child['paths'][agent] = path
-                    child['collisions'] = detect_collisions(child['paths'])
-                    child['cost'] = get_sum_of_cost(child['paths'])
-                    child['h'] = get_wdg_heuristic(self.my_map, child['paths'], self.starts, self.goals, self.heuristics, child['constraints'])
-
-                    self.push_node(child)
-
-        self.print_results(root)
+        # self.print_results(root)
         return root['paths']
 
     def print_results(self, node):

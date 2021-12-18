@@ -1,6 +1,10 @@
+from pulp.constants import LpMinimize
 from mdd import *
 from mvc import *
-from single_agent_planner import a_star
+from single_agent_planner import a_star, get_sum_of_cost
+from cbs_cg import CBSSolver
+from pulp import LpMaximize, LpProblem, LpStatus, lpSum, LpVariable, value, PULP_CBC_CMD
+import pulp as pl
 
 def get_cg_heuristic(my_map, paths, starts, goals, low_level_h, constraints):
     cardinal_conflicts = []
@@ -106,13 +110,13 @@ def balanceMDDs(paths1, paths2, node_dict1, node_dict2):
             # first mdd shorter
             goal_loc = paths1[0][-1]
             bottom_node = node_dict1[(goal_loc, height1-1)]
-            extendMDDTree(bottom_node, height2-height1)
+            extendMDDTree(bottom_node, height2-height1, node_dict1)
             
         else:
             # second is shorter
             goal_loc = paths2[0][-1]
             bottom_node = node_dict2[(goal_loc, height2-1)]
-            extendMDDTree(bottom_node, height1-height2)
+            extendMDDTree(bottom_node, height1-height2, node_dict2)
 
 def get_dg_heuristic(my_map, paths, starts, goals, low_level_h, constraints):
     dependencies = []
@@ -159,3 +163,76 @@ def check_jointMDD_for_dependency(bottom_node, paths1, paths2):
     if (bottom_node.location != [(goal_loc1),(goal_loc2)] or bottom_node.timestep != optimal_time):
         return True
     return False
+
+def get_wdg_heuristic(my_map, paths, starts, goals, low_level_h, constraints):
+    dependencies = []
+
+    all_roots = []
+    all_paths = []
+    all_mdds = []
+
+    for i in range(len(paths)):
+        path = get_all_optimal_paths(my_map, starts[i], goals[i], low_level_h[i], i, constraints)
+        root, nodes_dict = buildMDDTree(path)
+        all_roots.append(root)
+        all_paths.append(path)
+        all_mdds.append(nodes_dict)
+
+    for i in range(len(paths)): # num of agents in map
+        paths1 = all_paths[i]
+        root1 = all_roots[i]
+        node_dict1 = all_mdds[i]
+
+        for j in range(i+1,len(paths)):
+            paths2 = all_paths[j]
+            root2 = all_roots[j]
+            node_dict2 = all_mdds[j]
+            
+            root, bottom_node = buildJointMDD(paths1, paths2, root1, node_dict1, root2, node_dict2)
+
+            if (check_jointMDD_for_dependency(bottom_node, paths1, paths2)):
+                dependencies.append((i,j))
+
+    # g = WeightedGraph(list(range(len(paths))))
+    dependent_agents_dict = {}
+
+    model = LpProblem("edge weighted minimum vertex cover", LpMinimize)
+    for dependency in dependencies:
+        agent1 = dependency[0]
+        agent2 = dependency[1]
+        if agent1 not in dependent_agents_dict:
+            a1 = LpVariable('a'+str(agent1), lowBound=0, cat="Integer", e=None)
+            dependent_agents_dict[agent1] = a1
+        if agent2 not in dependent_agents_dict:
+            # add lp var 
+            a2 = LpVariable('a'+str(agent2), lowBound=0, cat="Integer", e=None)
+            dependent_agents_dict[agent2] = a2
+
+        new_starts = [starts[agent1], starts[agent2]]
+        new_goals = [goals[agent1], goals[agent2]]
+        
+        cbs = CBSSolver(my_map, new_starts, new_goals)
+        paths = cbs.find_solution_cg(root_constraints=constraints, root_h=1)
+        min_cost = get_sum_of_cost(paths)
+        sum_indv_opt_paths = len(all_paths[agent1][0]) + len(all_paths[agent2][0])
+        edge_weight = sum_indv_opt_paths - min_cost
+        # add LP constraints for the edge
+
+        model += dependent_agents_dict[agent1] + dependent_agents_dict[agent2] >= edge_weight
+    
+    objective = None
+    for lp_var in dependent_agents_dict.values():
+        objective += lp_var
+
+    model += objective
+
+    model.solve(pl.PULP_CBC_CMD(msg=False))
+
+
+    # for v in model.variables():
+    #     print(v.name, "=", v.varValue)
+
+    h = value(model.objective)
+    # print("WDG heuristic = ", model.objective)
+    # print("WDG heuristic = ", h)
+    return h
