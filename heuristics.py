@@ -1,7 +1,10 @@
+from pulp.constants import LpMinimize
 from mdd import *
 from mvc import *
 from single_agent_planner import a_star, get_sum_of_cost
 from cbs_cg import CBSSolver
+from pulp import LpMaximize, LpProblem, LpStatus, lpSum, LpVariable, value, PULP_CBC_CMD
+import pulp as pl
 
 def get_cg_heuristic(my_map, paths, starts, goals, low_level_h, constraints):
     cardinal_conflicts = []
@@ -107,13 +110,13 @@ def balanceMDDs(paths1, paths2, node_dict1, node_dict2):
             # first mdd shorter
             goal_loc = paths1[0][-1]
             bottom_node = node_dict1[(goal_loc, height1-1)]
-            extendMDDTree(bottom_node, height2-height1)
+            extendMDDTree(bottom_node, height2-height1, node_dict1)
             
         else:
             # second is shorter
             goal_loc = paths2[0][-1]
             bottom_node = node_dict2[(goal_loc, height2-1)]
-            extendMDDTree(bottom_node, height1-height2)
+            extendMDDTree(bottom_node, height1-height2, node_dict2)
 
 def get_dg_heuristic(my_map, paths, starts, goals, low_level_h, constraints):
     dependencies = []
@@ -190,42 +193,46 @@ def get_wdg_heuristic(my_map, paths, starts, goals, low_level_h, constraints):
             if (check_jointMDD_for_dependency(bottom_node, paths1, paths2)):
                 dependencies.append((i,j))
 
-    g = WeightedGraph(list(range(len(paths))))
+    # g = WeightedGraph(list(range(len(paths))))
+    dependent_agents_dict = {}
+
+    model = LpProblem("edge weighted minimum vertex cover", LpMinimize)
     for dependency in dependencies:
         agent1 = dependency[0]
         agent2 = dependency[1]
+        if agent1 not in dependent_agents_dict:
+            a1 = LpVariable('a'+str(agent1), lowBound=0, cat="Integer", e=None)
+            dependent_agents_dict[agent1] = a1
+        if agent2 not in dependent_agents_dict:
+            # add lp var 
+            a2 = LpVariable('a'+str(agent2), lowBound=0, cat="Integer", e=None)
+            dependent_agents_dict[agent2] = a2
+
         new_starts = [starts[agent1], starts[agent2]]
         new_goals = [goals[agent1], goals[agent2]]
+        
         cbs = CBSSolver(my_map, new_starts, new_goals)
         paths = cbs.find_solution_cg(root_constraints=constraints, root_h=1)
         min_cost = get_sum_of_cost(paths)
         sum_indv_opt_paths = len(all_paths[agent1][0]) + len(all_paths[agent2][0])
         edge_weight = sum_indv_opt_paths - min_cost
+        # add LP constraints for the edge
 
-        g.add_edge(dependency[0], dependency[1], edge_weight)
+        model += dependent_agents_dict[agent1] + dependent_agents_dict[agent2] >= edge_weight
+    
+    objective = None
+    for lp_var in dependent_agents_dict.values():
+        objective += lp_var
 
-    # g is the wdg graph
-    # either create our own branch and bound
-    # or figure out how to get an ilp solver working
+    model += objective
 
-    #       [i] ---- 4 ---- [j]
-    #         \             /
-    #           3          2
-    #             \ [k]  /
-#       2 variables/vertex i, j 
+    model.solve(pl.PULP_CBC_CMD(msg=False))
 
-   #       [i] ---- 4 ---- [j]
-    #         \             /
-    #           1          1
-    #             \ [k]  /
 
-# node in the bnb queue                                                     (infinity, infinity)
-# iter 1- branch on all possible values of 1 variable (i)           (0, infinity, infinity) (1, infinity, infinity) (2, infinity, infinity) (3, infinity) (4, infinity) 
-                    #                                                   (0,4, infinity)       (1,3,infinity)       (2,2)           (3,1)       (4,0)
-                                                                # (0, 4, 3) 
+    # for v in model.variables():
+    #     print(v.name, "=", v.varValue)
 
-# a branch-and-bound algorithm that branches on the possible
-# values of each xi
-# in the component and prunes nodes using
-# the cost of the best result so far.
-    return 0
+    h = value(model.objective)
+    # print("WDG heuristic = ", model.objective)
+    # print("WDG heuristic = ", h)
+    return h

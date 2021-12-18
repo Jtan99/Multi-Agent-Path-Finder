@@ -273,7 +273,7 @@ class CBSSolver(object):
             path = a_star(self.my_map, self.starts[i], self.goals[i], self.heuristics[i],
                           i, root['constraints'])
             if path is None:
-                raise BaseException('No solutions')
+                continue
             root['paths'].append(path)
 
         root['cost'] = get_sum_of_cost(root['paths'])

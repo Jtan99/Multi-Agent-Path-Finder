@@ -10,7 +10,10 @@ def get_cg_heuristic(my_map, paths, starts, goals, low_level_h, constraints):
     all_paths = []
     all_mdds = []
     for i in range(len(paths)):
-        paths = get_all_optimal_paths(my_map, starts[i], goals[i], low_level_h[i], i, constraints)
+        newpaths = get_all_optimal_paths(my_map, starts[i], goals[i], low_level_h[i], i, constraints)
+        if (paths == []):
+            print("need to prune")
+            # prune
         _, nodes_dict = buildMDDTree(paths)
         all_paths.append(paths)
         all_mdds.append(nodes_dict)
@@ -104,11 +107,11 @@ def balanceMDDs(paths1, paths2, node_dict1, node_dict2):
             # first mdd shorter
             goal_loc = paths1[0][-1]
             bottom_node = node_dict1[(goal_loc, height1-1)]
-            extendMDDTree(bottom_node, height2-height1)
+            extendMDDTree(bottom_node, height2-height1, node_dict1)
             
         else:
             # second is shorter
             goal_loc = paths2[0][-1]
             bottom_node = node_dict2[(goal_loc, height2-1)]
-            extendMDDTree(bottom_node, height1-height2)
+            extendMDDTree(bottom_node, height1-height2, node_dict2)
 
