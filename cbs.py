@@ -287,6 +287,7 @@ class CBSSolver(object):
 
             if not curr['collisions']:
                 self.print_results(curr)
+                self.write_results()
                 return curr['paths'] # this is the goal node
             
             collision = curr['collisions'][0]
@@ -325,6 +326,7 @@ class CBSSolver(object):
                     self.push_node(child)
 
         self.print_results(root)
+        self.write_results()        
         return root['paths']
 
     def find_solution_cg(self, disjoint=True, root_constraints=[], root_h=0):
@@ -397,6 +399,7 @@ class CBSSolver(object):
                     self.push_node(child)
 
         self.print_results(root)
+        self.write_results()
         return root['paths']
 
     def find_solution_dg(self, disjoint=True):
@@ -542,8 +545,22 @@ class CBSSolver(object):
                     self.push_node(child)
 
         self.print_results(root)
+        self.write_results()
         return root['paths']
 
+    def write_results(self):
+        filename = 'data.csv'
+        file = open(filename, 'a')
+        # file.write("map_cols, map_rows, agents, nodes_generated, nodes_expanded, runtime")
+        generated = self.num_of_generated
+        expanded = self.num_of_expanded
+        time = CPU_time = timer.time() - self.start_time
+        agents = self.num_of_agents
+        num_cols = len(self.my_map[0])
+        num_rows = len(self.my_map)
+        res = f'{num_cols}, {num_rows}, {agents}, {generated}, {expanded}, {round(time,3)}\n'
+        file.write(res)
+        
     def print_results(self, node):
         print("\n Found a solution! \n")
         CPU_time = timer.time() - self.start_time

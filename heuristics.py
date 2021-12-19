@@ -196,7 +196,7 @@ def get_wdg_heuristic(my_map, paths, starts, goals, low_level_h, constraints):
     # g = WeightedGraph(list(range(len(paths))))
     dependent_agents_dict = {}
 
-    model = LpProblem("edge weighted minimum vertex cover", LpMinimize)
+    model = LpProblem("edge_weighted_minimum_vertex_cover", LpMinimize)
     for dependency in dependencies:
         agent1 = dependency[0]
         agent2 = dependency[1]
