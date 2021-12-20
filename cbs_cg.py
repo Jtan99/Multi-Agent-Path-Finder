@@ -256,7 +256,7 @@ class CBSSolver(object):
         # print("Expanded nodes {}".format(self.num_of_expanded))
         return node
 
-    def find_solution_cg(self, disjoint=True, root_constraints=[], root_h=0):
+    def find_solution_cg(self, all_paths=[], all_mdds=[], disjoint=True, root_constraints=[], root_h=0):
         """ Finds paths for all agents from their start locations to their goal locations
 
         disjoint    - use disjoint splitting or not
@@ -277,7 +277,10 @@ class CBSSolver(object):
             root['paths'].append(path)
 
         root['cost'] = get_sum_of_cost(root['paths'])
-        root['h'] = get_cg_heuristic(self.my_map, root['paths'], self.starts, self.goals, self.heuristics, root['constraints'])
+        root['h'] = get_cg_heuristic(self.my_map, root['paths'], self.starts, self.goals, self.heuristics, root['constraints'], all_paths, all_mdds)
+        # root['h'] = get_cg_heuristic(self.my_map, root['paths'], self.starts, self.goals, self.heuristics, root['constraints'])
+        if (root['h'] == -1):
+            return []
         root['collisions'] = detect_collisions(root['paths'])
         self.push_node(root)
 
@@ -286,10 +289,121 @@ class CBSSolver(object):
 
             if not curr['collisions']:
                 # self.print_results(curr)
+                # self.write_results()
                 return curr['paths'] # this is the goal node
             
             collision = curr['collisions'][0]
             # constraints = standard_splitting(collision)
+            constraints = disjoint_splitting(collision)
+
+            for constraint in constraints:
+                
+                if is_conflicting_constraint(constraint, curr['constraints']):
+                    continue
+                child = {}
+                child['constraints'] = copy.deepcopy(curr['constraints'])
+                if constraint not in child['constraints']:
+                    child['constraints'].append(constraint)
+                child['paths']= copy.deepcopy(curr['paths'])
+
+                prune_child = False
+                if constraint['positive']:
+                    conflicted_agents = paths_violate_constraint(constraint, child['paths'])
+                    for i in conflicted_agents:
+                        # new_path = a_star(self.my_map, self.starts[i], self.goals[i], self.heuristics[i],
+                        #     i, child['constraints'])
+                        newpaths = get_all_optimal_paths(self.my_map, self.starts[i], self.goals[i], self.heuristics[i], i, child['constraints'])
+                        if newpaths != []:
+                            all_paths[i] = newpaths
+                            _, all_mdds[i] = buildMDDTree(all_paths[i])
+                            child['paths'][i] = all_paths[i][0]
+                        else:
+                            prune_child = True
+                            break
+
+                if prune_child:
+                    # print('would be prune but nty!')
+                    continue
+
+                agent = constraint['agent']                
+                # path = a_star(self.my_map, self.starts[agent], self.goals[agent], self.heuristics[agent],
+                #           agent, child['constraints'])
+                newpaths = get_all_optimal_paths(self.my_map, self.starts[agent], self.goals[agent], self.heuristics[agent], agent, child['constraints'])
+                if newpaths != []:
+                    all_paths[agent] = newpaths 
+                    _, all_mdds[agent] = buildMDDTree(all_paths[agent])
+                    child['paths'][agent] = all_paths[agent][0]
+                    child['collisions'] = detect_collisions(child['paths'])
+                    child['cost'] = get_sum_of_cost(child['paths'])
+                    child['h'] = get_cg_heuristic(self.my_map, child['paths'], self.starts, self.goals, self.heuristics, child['constraints'], all_paths, all_mdds)
+                    # child['h'] = get_cg_heuristic(self.my_map, child['paths'], self.starts, self.goals, self.heuristics, child['constraints'])
+                    if (child['h'] != -1):
+                        self.push_node(child)
+                    
+        # self.write_results()
+        # self.print_results(root)
+        return root['paths']
+
+    def write_results(self):
+        filename = 'data.csv'
+        file = open(filename, 'a')
+        # file.write("map_cols, map_rows, agents, nodes_generated, nodes_expanded, runtime")
+        generated = self.num_of_generated
+        expanded = self.num_of_expanded
+        time = CPU_time = timer.time() - self.start_time
+        agents = self.num_of_agents
+        num_cols = len(self.my_map[0])
+        num_rows = len(self.my_map)
+        res = f'{num_cols}, {num_rows}, {agents}, {generated}, {expanded}, {round(time,3)}\n'
+        file.write(res)
+
+    def print_results(self, node):
+        print("\n Found a solution! \n")
+        CPU_time = timer.time() - self.start_time
+        # print("Final constraints:", node['constraints'])
+        for i in range(len(node['paths'])):
+            print("Agent {}: {}".format(i, node['paths'][i]))
+        print("CPU time (s):    {:.2f}".format(CPU_time))
+        print("Sum of costs:    {}".format(get_sum_of_cost(node['paths'])))
+        print("Expanded nodes:  {}".format(self.num_of_expanded))
+        print("Generated nodes: {}".format(self.num_of_generated))
+        #write to file
+
+    def find_solution(self, disjoint=True):
+        """ Finds paths for all agents from their start locations to their goal locations
+
+        disjoint    - use disjoint splitting or not
+        """
+
+        self.start_time = timer.time()
+
+        root = {'cost': 0,
+                'h': 0,
+                'constraints': [],
+                'paths': [],
+                'collisions': []}
+        for i in range(self.num_of_agents):  # Find initial path for each agent
+            path = a_star(self.my_map, self.starts[i], self.goals[i], self.heuristics[i],
+                          i, root['constraints'])
+            if path is None:
+                raise BaseException('No solutions')
+            root['paths'].append(path)
+
+        root['cost'] = get_sum_of_cost(root['paths'])
+
+        root['h'] = 0
+        root['collisions'] = detect_collisions(root['paths'])
+        self.push_node(root)
+
+        while len(self.open_list) > 0:
+            curr = self.pop_node()
+
+            if not curr['collisions']:
+                # self.print_results(curr)
+                # self.write_results()
+                return curr['paths'] # this is the goal node
+            
+            collision = curr['collisions'][0]
             constraints = disjoint_splitting(collision)
             for constraint in constraints:
                 if is_conflicting_constraint(constraint, curr['constraints']):
@@ -321,21 +435,9 @@ class CBSSolver(object):
                     child['paths'][agent] = path
                     child['collisions'] = detect_collisions(child['paths'])
                     child['cost'] = get_sum_of_cost(child['paths'])
-                    child['h'] = get_cg_heuristic(self.my_map, child['paths'], self.starts, self.goals, self.heuristics, child['constraints'])
-
+                    child['h'] = 0
                     self.push_node(child)
 
         # self.print_results(root)
+        # self.write_results()        
         return root['paths']
-
-    def print_results(self, node):
-        print("\n Found a solution! \n")
-        CPU_time = timer.time() - self.start_time
-        # print("Final constraints:", node['constraints'])
-        for i in range(len(node['paths'])):
-            print("Agent {}: {}".format(i, node['paths'][i]))
-        print("CPU time (s):    {:.2f}".format(CPU_time))
-        print("Sum of costs:    {}".format(get_sum_of_cost(node['paths'])))
-        print("Expanded nodes:  {}".format(self.num_of_expanded))
-        print("Generated nodes: {}".format(self.num_of_generated))
-        #write to file

@@ -2,37 +2,31 @@ from mdd import *
 from mvc import *
 from single_agent_planner import a_star, get_sum_of_cost
 
-def get_cg_heuristic(my_map, paths, starts, goals, low_level_h, constraints):
+def get_cg_heuristic(my_map, paths, starts, goals, low_level_h, constraints, all_paths=[], all_mdds=[]):
     cardinal_conflicts = []
 
     # build mdd for every agent
     # store reuse it later
-    all_paths = []
-    all_mdds = []
-    for i in range(len(paths)):
-        newpaths = get_all_optimal_paths(my_map, starts[i], goals[i], low_level_h[i], i, constraints)
-        if (paths == []):
-            print("need to prune")
-            # prune
-        _, nodes_dict = buildMDDTree(paths)
-        all_paths.append(paths)
-        all_mdds.append(nodes_dict)
+    # all_paths = []
+    # all_mdds = []
+
+    if (len(all_paths) == 0 and len(all_mdds) == 0):
+        for i in range(len(paths)):
+            newpaths = get_all_optimal_paths(my_map, starts[i], goals[i], low_level_h[i], i, constraints)
+            if (newpaths == []):
+                return -1
+            _, nodes_dict = buildMDDTree(newpaths)
+            all_paths.append(newpaths)
+            all_mdds.append(nodes_dict)
 
     for i in range(len(paths)): # num of agents in map
-        # paths1 = get_all_optimal_paths(my_map, starts[i], goals[i], low_level_h[i])
-        # print(f"All optimal paths for agent {i}: {paths1}")
-        # root1, nodes_dict1 = buildMDDTree(paths1)
-        # displayLayer(root1, 0)
         paths1 = all_paths[i]
         nodes_dict1 = all_mdds[i]
 
         for j in range(i+1,len(paths)):
-            # paths2 = get_all_optimal_paths(my_map, starts[j], goals[j], low_level_h[j])
-            # print(f"All optimal paths for agent {j}: {paths2}")
-            # root2, nodes_dict2 = buildMDDTree(paths2)
-            paths2 = all_paths[j]
-            nodes_dict2 = all_mdds[j]
 
+            paths2 = all_paths[j] 
+            nodes_dict2 = all_mdds[j] 
             balanceMDDs(paths1, paths2, nodes_dict1, nodes_dict2)
             
             if (check_MDDs_for_conflict(nodes_dict1, nodes_dict2)):
