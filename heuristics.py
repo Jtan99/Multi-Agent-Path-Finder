@@ -196,7 +196,7 @@ def get_wdg_heuristic(my_map, paths, starts, goals, low_level_h, constraints):
     # g = WeightedGraph(list(range(len(paths))))
     dependent_agents_dict = {}
 
-    model = LpProblem("edge weighted minimum vertex cover", LpMinimize)
+    model = LpProblem("edge_weighted_minimum_vertex_cover", LpMinimize)
     for dependency in dependencies:
         agent1 = dependency[0]
         agent2 = dependency[1]
@@ -212,8 +212,15 @@ def get_wdg_heuristic(my_map, paths, starts, goals, low_level_h, constraints):
         new_goals = [goals[agent1], goals[agent2]]
         
         cbs = CBSSolver(my_map, new_starts, new_goals)
-        paths = cbs.find_solution_cg(root_constraints=constraints, root_h=1)
+        # paths = cbs.find_solution_cg(all_paths=all_paths, all_mdds=all_mdds, root_constraints=constraints, root_h=0)
+        paths = cbs.find_solution()
+
+        if (paths == []):
+            # prune this wdg node???
+            return -1
         min_cost = get_sum_of_cost(paths)
+        # min_cost_reg = get_sum_of_cost(paths_reg)
+        # print("cost:", min_cost, min_cost_reg)
         sum_indv_opt_paths = len(all_paths[agent1][0]) + len(all_paths[agent2][0])
         edge_weight = sum_indv_opt_paths - min_cost
         # add LP constraints for the edge

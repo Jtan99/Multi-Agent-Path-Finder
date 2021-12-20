@@ -287,6 +287,7 @@ class CBSSolver(object):
 
             if not curr['collisions']:
                 self.print_results(curr)
+                self.write_results()
                 return curr['paths'] # this is the goal node
             
             collision = curr['collisions'][0]
@@ -325,6 +326,7 @@ class CBSSolver(object):
                     self.push_node(child)
 
         self.print_results(root)
+        self.write_results()        
         return root['paths']
 
     def find_solution_cg(self, disjoint=True, root_constraints=[], root_h=0):
@@ -357,6 +359,7 @@ class CBSSolver(object):
 
             if not curr['collisions']:
                 self.print_results(curr)
+                self.write_results()
                 return curr['paths'] # this is the goal node
             
             collision = curr['collisions'][0]
@@ -397,6 +400,7 @@ class CBSSolver(object):
                     self.push_node(child)
 
         self.print_results(root)
+        self.write_results()
         return root['paths']
 
     def find_solution_dg(self, disjoint=True):
@@ -429,6 +433,7 @@ class CBSSolver(object):
 
             if not curr['collisions']:
                 self.print_results(curr)
+                self.write_results()
                 return curr['paths'] # this is the goal node
             
             collision = curr['collisions'][0]
@@ -468,6 +473,7 @@ class CBSSolver(object):
 
                     self.push_node(child)
 
+        self.write_results()
         self.print_results(root)
         return root['paths']
     
@@ -493,6 +499,9 @@ class CBSSolver(object):
 
         root['cost'] = get_sum_of_cost(root['paths'])
         root['h'] = get_wdg_heuristic(self.my_map, root['paths'], self.starts, self.goals, self.heuristics, root['constraints']) 
+        # root['h'] = get_dg_heuristic(self.my_map, root['paths'], self.starts, self.goals, self.heuristics, root['constraints']) 
+        if (root['h'] == -1):
+            raise BaseException('No solution')
     
         root['collisions'] = detect_collisions(root['paths'])
         self.push_node(root)
@@ -502,6 +511,7 @@ class CBSSolver(object):
 
             if not curr['collisions']:
                 self.print_results(curr)
+                self.write_results()
                 return curr['paths'] # this is the goal node
             
             collision = curr['collisions'][0]
@@ -538,12 +548,31 @@ class CBSSolver(object):
                     child['collisions'] = detect_collisions(child['paths'])
                     child['cost'] = get_sum_of_cost(child['paths'])
                     child['h'] = get_wdg_heuristic(self.my_map, child['paths'], self.starts, self.goals, self.heuristics, child['constraints'])
-
-                    self.push_node(child)
+                    # child['h'] = get_dg_heuristic(self.my_map, child['paths'], self.starts, self.goals, self.heuristics, child['constraints'])
+                    if (child['h'] != -1):
+                        self.push_node(child)
 
         self.print_results(root)
+        self.write_results()
         return root['paths']
 
+    def write_results(self):
+        filename = 'data.csv'
+        file = open(filename, 'a')
+        # file.write("map_cols, map_rows, agents, nodes_generated, nodes_expanded, runtime")
+        generated = self.num_of_generated
+        expanded = self.num_of_expanded
+        time = CPU_time = timer.time() - self.start_time
+        num_open_cells = 0
+        for row in self.my_map:
+            num_open_cells += len(row)-sum(row)
+        agents = self.num_of_agents
+        density = agents / num_open_cells
+        num_cols = len(self.my_map[0])
+        num_rows = len(self.my_map)
+        res = f'{num_cols}, {num_rows}, {agents}, {generated}, {expanded}, {density:.3f}, {round(time,3)}\n'
+        file.write(res)
+        
     def print_results(self, node):
         print("\n Found a solution! \n")
         CPU_time = timer.time() - self.start_time
