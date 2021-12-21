@@ -288,8 +288,8 @@ def a_star(my_map, start_loc, goal_loc, h_values, agent, constraints):
 
             # max possible path length = num_open_cells - #higher priority agents
             # max possible timestep is one below that
-            if child['time'] >= num_open_cells - agent:
-                return None
+            # if child['time'] >= num_open_cells - agent:
+            #     return None
 
             if is_pos_constrained(curr['loc'], child['loc'], child['time'], pos_constraint_table):
                 # a positive constraint on another agent means negative on this agent

@@ -302,7 +302,7 @@ def buildJointMDD(paths1, paths2, root1, node_dict1, root2, node_dict2):
     existing_dict = {
         (root1.location, root2.location, 0): root
     }
-    
+    new_node = None
     while (not q.empty()):
     # pop one node from open list
         curr = q.get()

@@ -15,7 +15,7 @@
             // "program": "c:\\Users\\johns\\Documents\\Johnson\\cmpt 417\\code\\instance_reader.py",
             "console": "integratedTerminal",
             // "args": ["--instance", "instances/double4by4diff.txt", "--solver", "Independent"]
-            "args": ["--instance", "more_walls/high_density/instance_8.txt", "--solver", "CBS_cg", "--batch"]
+            "args": ["--instance", "puzzle_instances/instance_*.txt", "--solver", "CBS_wdg", "--batch"]
 
         }
     ]

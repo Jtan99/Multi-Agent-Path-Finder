@@ -1,5 +1,5 @@
 import random
-filename = "c:\\Users\\johns\\Documents\\Johnson\\cmpt 417\\code\\warehouse_instances\\small_2.txt"
+filename = "c:\\Users\\johns\\Documents\\Johnson\\cmpt 417\\code\\warehouse_instances\\small_1.txt"
 f = open(filename, 'r')
 # first line: #rows #columns
 line = f.readline()
