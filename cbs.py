@@ -572,6 +572,7 @@ class CBSSolver(object):
         num_rows = len(self.my_map)
         res = f'{num_cols}, {num_rows}, {agents}, {generated}, {expanded}, {density:.3f}, {round(time,3)}\n'
         file.write(res)
+        file.close()
         
     def print_results(self, node):
         print("\n Found a solution! \n")
