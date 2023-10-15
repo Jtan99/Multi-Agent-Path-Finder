@@ -57,7 +57,6 @@ def compute_heuristics(my_map, goal):
         h_values[loc] = node['cost']
     return h_values
 
-
 def get_path(goal_node):
     path = []
     curr = goal_node
@@ -221,8 +220,6 @@ class JointMDDNode():
         if (self not in parent.children):
             parent.children.append(self)
 
-        
-
 def displayLayer(node, level):
     
     # print("Level:", level)
@@ -233,8 +230,7 @@ def displayLayer(node, level):
     else:
         for child in node.children:
             displayLayer(child, level+1)
-
-    
+   
 def buildMDDTree(optimal_paths):
     root_location = optimal_paths[0][0]
     root_node = MDDNode(root_location, 0)
@@ -267,8 +263,76 @@ def extendMDDTree(goal_node, height_diff, node_dict):
         curr = new_node
         # print("new node: ", new_node.display())
 
-    
-    
+def check_MDDs_for_conflict(node_dict1, node_dict2):
+    # given two dicts
+    # indexed like dict[location] = node in mdd tree
+    # build two dicts
+    # indexed like dict[timestep] = [ locations ]
+
+    dict1 = {} # timestep: [location]
+    dict2 = {}
+    for (loc,time) in node_dict1.keys():
+        # build dict
+        if time in dict1: # if this timestep was original mdd
+            dict1[time].append(loc)
+        else: 
+            dict1[time] = [loc]
+
+    for (loc,time) in node_dict2.keys():
+        # build dict
+        if time in dict2:
+            dict2[time].append(loc)
+        else:
+            dict2[time] = [loc]
+
+    # lst = list(dict1.keys())
+    # missing_timesteps_1 = [x for x in range(lst[0], lst[-1]+1) if x not in lst] # returns the missing timesteps
+    # lst = list(dict2.keys())
+    # missing_timesteps_2 = [x for x in range(lst[0], lst[-1]+1) if x not in lst] # returns the missing timesteps
+
+    # for timestep in missing_timesteps_1:
+    #     dict1[timestep] = dict1[timestep-1]
+    # for timestep in missing_timesteps_2:
+    #     dict2[timestep] = dict2[timestep-1]
+
+    #extend dictionary
+    diff = abs(len(dict1) - len(dict2))
+    if len(dict1) == len(dict2):
+        pass
+    elif len(dict1) > len(dict2): # mdd2/dict2 is shorter
+        # extend dict2 by diff
+        last_timestep = max(dict2.keys())   # last timestep = 47
+        for i in range(diff):               # i = 0 1 2 3
+            dict2[last_timestep+i+1] = dict2[last_timestep]  # new timesteps = 48 49 50 51
+    else:
+        #extend dict1
+        last_timestep = max(dict1.keys())
+        for i in range(diff):
+            dict1[last_timestep+i+1] = dict1[last_timestep]
+
+    for time, locs in dict1.items():
+        if (len(locs) == 1 and locs == dict2[time]):
+            return True #found a cardinal
+
+    return False
+
+def balanceMDDs(paths1, paths2, node_dict1, node_dict2):
+    height1 = len(paths1[0])
+    height2 = len(paths2[0])
+
+    if (height1 != height2):
+        if (height1 < height2):
+            # first mdd shorter
+            goal_loc = paths1[0][-1]
+            bottom_node = node_dict1[(goal_loc, height1-1)]
+            extendMDDTree(bottom_node, height2-height1, node_dict1)
+            
+        else:
+            # second is shorter
+            goal_loc = paths2[0][-1]
+            bottom_node = node_dict2[(goal_loc, height2-1)]
+            extendMDDTree(bottom_node, height1-height2, node_dict2)
+
 def buildJointMDD(paths1, paths2, root1, node_dict1, root2, node_dict2):
     height1 = len(paths1[0])
     height2 = len(paths2[0])
@@ -379,3 +443,11 @@ def buildJointMDD(paths1, paths2, root1, node_dict1, root2, node_dict2):
 
 # if __name__ == "__main__":
 #     main()
+
+def check_jointMDD_for_dependency(bottom_node, paths1, paths2):
+    optimal_time = max(len(paths1),len(paths2))
+    goal_loc1 = paths1[-1]
+    goal_loc2 = paths2[-1]
+    if (bottom_node.location != [(goal_loc1),(goal_loc2)] or bottom_node.timestep != optimal_time):
+        return True
+    return False

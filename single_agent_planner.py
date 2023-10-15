@@ -4,13 +4,11 @@ def move(loc, dir):
     directions = [(0, -1), (1, 0), (0, 1), (-1, 0), (0, 0)]
     return loc[0] + directions[dir][0], loc[1] + directions[dir][1]
 
-
 def get_sum_of_cost(paths):
     rst = 0
     for path in paths:
         rst += len(path) - 1
     return rst
-
 
 def compute_heuristics(my_map, goal):
     # Use Dijkstra to build a shortest-path tree rooted at the goal location
@@ -46,13 +44,11 @@ def compute_heuristics(my_map, goal):
         h_values[loc] = node['cost']
     return h_values
 
-
 def build_constraint_table(constraints, agent):
-    ##############################
-    # Task 1.2/1.3: Return a table that constains the list of constraints of
-    #               the given agent for each time step. The table can be used
-    #               for a more efficient constraint violation check in the 
-    #               is_constrained function.
+    # Return a table that constains the list of constraints of
+    # the given agent for each time step. The table can be used
+    # for a more efficient constraint violation check in the 
+    # is_constrained function.
     constraint_table = dict()
     for constraint in constraints:
         if constraint['agent'] != agent:
@@ -63,7 +59,6 @@ def build_constraint_table(constraints, agent):
         else:
             constraint_table[t] = [constraint]
     return constraint_table
-
 
 def build_constraint_table_with_pos(constraints, agent):
     #constraint table of positive constraints of OTHER agents
@@ -80,7 +75,6 @@ def build_constraint_table_with_pos(constraints, agent):
             constraint_table[t] = [constraint]
     return constraint_table
 
-
 def get_location(path, time):
     if time < 0:
         return path[0]
@@ -88,7 +82,6 @@ def get_location(path, time):
         return path[time]
     else:
         return path[-1]  # wait at the goal location
-
 
 def get_path(goal_node):
     path = []
@@ -99,12 +92,10 @@ def get_path(goal_node):
     path.reverse()
     return path
 
-
 def is_constrained(curr_loc, next_loc, next_time, constraint_table):
-    ##############################
-    # Task 1.2/1.3: Check if a move from curr_loc to next_loc at time step next_time violates
-    #               any given constraint. For efficiency the constraints are indexed in a constraint_table
-    #               by time step, see build_constraint_table.
+    # Check if a move from curr_loc to next_loc at time step next_time violates
+    # any given constraint. For efficiency the constraints are indexed in a constraint_table
+    # by time step, see build_constraint_table.
 
     if next_time not in constraint_table:
         return False
@@ -123,7 +114,6 @@ def is_constrained(curr_loc, next_loc, next_time, constraint_table):
                 return True
 
     return False
-
 
 def is_pos_constrained(curr_loc, next_loc, next_time, pos_constraint_table):
     #return True if another agent has a positive constraint that prevents us from moving here at this timestep
@@ -168,11 +158,9 @@ def check_agent_pos_constrained(curr, constraint_table):
 def push_node(open_list, node):
     heapq.heappush(open_list, (node['g_val'] + node['h_val'], node['h_val'], node['loc'], node))
 
-
 def pop_node(open_list):
     _, _, _, curr = heapq.heappop(open_list)
     return curr
-
 
 def compare_nodes(n1, n2):
     """Return true is n1 is better than n2."""
@@ -216,10 +204,8 @@ def a_star(my_map, start_loc, goal_loc, h_values, agent, constraints):
     num_open_cells = 0 # could be parameter
     for row in my_map:
         num_open_cells += len(row)-sum(row)
-    ##############################
-    # Task 1.1: Extend the A* search to search in the space-time domain
-    #           rather than space domain, only.
 
+    # Extend the A* search to search in the space-time domain
     open_list = []
     closed_list = dict() #contains list of already expanded nodes
     earliest_goal_timestep = 0
@@ -231,8 +217,6 @@ def a_star(my_map, start_loc, goal_loc, h_values, agent, constraints):
     closed_list[(root['loc'], root['time'])] = root
     while len(open_list) > 0:
         curr = pop_node(open_list)
-        #############################
-        # Task 1.4: Adjust the goal test condition to handle goal constraints
         if curr['loc'] == goal_loc and not goal_constraint_exists(goal_loc, curr['time'], constraint_table, pos_constraint_table):
             return get_path(curr)
 

@@ -29,14 +29,9 @@ class IndependentSolver(object):
         start_time = timer.time()
         result = []
 
-        ##############################
-        # Task 0: Understand the following code (see the lab description for some hints)
-
         for i in range(self.num_of_agents):  # Find path for each agent
             paths = get_all_optimal_paths(self.my_map, self.starts[i], self.goals[i], self.heuristics[i])
             print(f"All optimal paths for agent {i}: {paths}")
-
-        ##############################
 
         self.CPU_time = timer.time() - start_time
 

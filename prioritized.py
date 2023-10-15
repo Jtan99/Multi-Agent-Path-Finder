@@ -51,13 +51,7 @@ class PrioritizedPlanningSolver(object):
                 raise BaseException('No solutions')
             result.append(path)
 
-            ##############################
-            # Task 2: Add constraints here
-            #         Useful variables:
-            #            * path contains the solution path of the current (i'th) agent, e.g., [(1,1),(1,2),(1,3)]
-            #            * self.num_of_agents has the number of total agents
-            #            * constraints: array of constraints to consider for future A* searches
-
+            # Add constraints here
             for time in range(len(path)):
                 for agent in range(i+1, self.num_of_agents): # lower priority agents
                     vertex_constraint = {
@@ -87,7 +81,6 @@ class PrioritizedPlanningSolver(object):
                         'positive': False
                     }
                     constraints.append(vertex_constraint)
-            ##############################
 
         self.CPU_time = timer.time() - start_time
 
