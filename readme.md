@@ -1,5 +1,5 @@
 # Multi Agent Path Finder (MAPF)
-![](/mapf_demo.mp4)
+https://github.com/Jtan99/Multi-Agent-Path-Finder/assets/51930622/a75025f5-1539-4bf2-b9b9-86a30cf4bb41
 
 **Table of Contents**
 - [Introduction to MAPF](#introduction-to-mapf)
