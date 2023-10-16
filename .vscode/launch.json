@@ -13,17 +13,14 @@
             "console": "integratedTerminal",
 
             // "args": ["--instance", "more_walls_instances/low_density/instance_*.txt", "--solver", "CBS"]
-            // "args": ["--instance", "more_walls_instances/low_density/instance_*.txt", "--solver", "CBS_cg"]
+            "args": ["--instance", "more_walls_instances/low_density/instance_*.txt", "--solver", "CBS_cg"]
             // "args": ["--instance", "more_walls_instances/low_density/instance_*.txt", "--solver", "CBS_dg"]
             // "args": ["--instance", "more_agents_instances/low_density/instance_*.txt", "--solver", "CBS_wdg"]
 
             // "args": ["--instance", "more_walls_instances/med_density/instance_*.txt", "--solver", "CBS", "--batch"]
             // "args": ["--instance", "more_walls_instances/med_density/instance_*.txt", "--solver", "CBS_cg", "--batch"]
             // "args": ["--instance", "more_walls_instances/med_density/instance_*.txt", "--solver", "CBS_dg", "--batch"]
-            "args": ["--instance", "more_agents_instances/med_density/instance_*.txt", "--solver", "CBS_wdg", "--batch"]
-
-
-
+            // "args": ["--instance", "more_agents_instances/med_density/instance_*.txt", "--solver", "CBS_wdg", "--batch"]
         }
     ]
 }
