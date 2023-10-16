@@ -1,5 +1,4 @@
 # Multi Agent Path Finder (MAPF)
-https://github.com/Jtan99/Multi-Agent-Path-Finder/assets/51930622/a75025f5-1539-4bf2-b9b9-86a30cf4bb41
 
 **Table of Contents**
 - [Introduction to MAPF](#introduction-to-mapf)
@@ -19,6 +18,8 @@ https://github.com/Jtan99/Multi-Agent-Path-Finder/assets/51930622/a75025f5-1539-
 - [References](#references)
 ## Introduction to MAPF
 Multi-Agent Path Finding (MAPF)  is an important topic in many fields, such as robotics, gaming, and AI. In this project we will implement and analyze different algorithms for the MAPF Problem. MAPF is defined as follows: given a set of agents and their respective start and goal locations, determine a set of minimum cost paths that lead the agents to their goals while avoiding collisions between agents and other obstacles.
+
+https://github.com/Jtan99/Multi-Agent-Path-Finder/assets/51930622/a75025f5-1539-4bf2-b9b9-86a30cf4bb41
 
 ## Domain Knowledge
 ### CBS
