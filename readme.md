@@ -55,7 +55,7 @@ The WDG heuristic, or Weighted Distance Graph Heuristic, builds upon the DG heur
 ### First Time Installation
 Clone Repository
 
-    git clone "https://github.com/Jtan99/Multi-Agent-Path-Finder"
+    git clone "https://github.com/jtan-gh/Multi-Agent-Path-Finder"
 ### Run App locally
   1. Open folder in Visual Studio
   2. Update &lt;path to file> in launch.json
@@ -65,7 +65,7 @@ Clone Repository
 ## Research: Investigating the Impact of Increasing Agent Density on CBSH Performance
 Our goal is to examine how the performance of the Conflict-Based Search with Heuristics (CBSH) algorithm degrades as the complexity of problem instances increases due to higher agent density. We aim to understand how the agent density, calculated as the ratio of the number of agents to the number of open locations in the instance, influences the efficiency and effectiveness of CBSH. By analyzing CBSH's performance across different levels of agent density, we seek to determine whether increasing density through the addition of more agents or obstacles affects the algorithm differently.
 
-"For detailed information on our research plan, case study, and results, please refer to the  [MAPF_report.pdf](https://github.com/Jtan99/Multi-Agent-Path-Finder/blob/master/MAPF_report.pdf) starting from Section 3.
+"For detailed information on our research plan, case study, and results, please refer to the  [MAPF_report.pdf](https://github.com/jtan-gh/Multi-Agent-Path-Finder/blob/master/MAPF_report.pdf) starting from Section 3.
 
 ## References
 - Li, J., Felner, A., Boyarski, E., Ma, H., & Koenig, S. (2019). Improved Heuristics for Multi-Agent Path Finding with Conflict-Based Search. Proceedings of the Twenty-Eighth International Joint Conference on Artificial Intelligence. doi:10.24963/ijcai.2019/63
